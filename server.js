@@ -12,15 +12,15 @@ const T = new Twit({
 
 // Run instantly
 // tweetIt();
-// Then run again every minute
-setInterval(tweetIt, 1000 * 60 * 0.5);
+// Then run again every hour
+setInterval(tweetIt, 1000 * 60 * 60);
 
 // Define tweet
 function tweetIt() {
     const r = Math.floor(Math.random() * 100);
     // Insert tweet
     const tweet = {
-        status: `Random number of the moment is ${r}`
+        status: `Random number of the hour is ${r}`
     }
 
     console.log(tweet);
