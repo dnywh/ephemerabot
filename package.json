@@ -1,7 +1,7 @@
 {
   "name": "ephemerabot",
   "version": "1.0.0",
-  "description": "A Twitter bot for Ephemera",
+  "description": "A Twitter bot for Ephemera.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -16,7 +16,8 @@
     "api",
     "twitter",
     "twitter bot",
-    "bot"
+    "bot",
+    "heroku"
   ],
   "author": "Danny White",
   "license": "MIT",
