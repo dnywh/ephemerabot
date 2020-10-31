@@ -4,6 +4,7 @@ require("dotenv").config();
 // Allow for scheduling
 const schedule = require('node-schedule');
 
+// Allow for image conversion
 const imageToBase64 = require('image-to-base64');
 
 // Initiate Twit
@@ -19,60 +20,61 @@ const T = new Twit({
 // Get Airtable going
 const base = require("airtable").base(process.env.AIRTABLE_BASE_ID);
 const table = "Main";
-
 const allRecords = []
 
-base(table).select({
-    // Selecting the first 3 records in Grid:
-    // maxRecords: 3,
-    view: "Grid",
-    filterByFormula: "({hidden}= '')", // Only show items that are not hidden
-    sort: [{ field: "date", direction: "desc" }], // Overrides what's set in the above view, just in case I forget
-}).eachPage(function page(records, fetchNextPage) {
-    // This function (`page`) will get called for each page of records.
+function tweetFromAirtable() {
+    base(table).select({
+        // Selecting the first 3 records in Grid:
+        // maxRecords: 3,
+        view: "Grid",
+        filterByFormula: "({hidden}= '')", // Only show items that are not hidden
+        sort: [{ field: "date", direction: "desc" }], // Overrides what's set in the above view, just in case I forget
+    }).eachPage(function page(records, fetchNextPage) {
+        // This function (`page`) will get called for each page of records.
 
-    records.forEach(function (record) {
-        // console.log('Retrieved', record.get('name'));
-        allRecords.push(record);
+        records.forEach(function (record) {
+            // console.log('Retrieved', record.get('name'));
+            allRecords.push(record);
+        });
+
+
+        // To fetch the next page of records, call `fetchNextPage`.
+        // If there are more records, `page` will get called again.
+        // If there are no more records, `done` will get called.
+        fetchNextPage();
+
+    }, function done(err) {
+        if (err) { console.error(err); return; }
+        // If successful...
+        // Get a random record for later tweeting
+        const randomRecord = allRecords[Math.floor(Math.random() * allRecords.length)];
+        // return randomRecord;
+        const randomRecordName = randomRecord.get("name");
+        const randomRecordDate = randomRecord.get("date");
+        const randomRecordLocation = randomRecord.get("location");
+        const randomRecordCountry = randomRecord.get("country");
+        const randomRecordTags = randomRecord.get("tags");
+        const randomRecordTagsFormatted = randomRecordTags.join(", ")
+        // console.log(randomRecordTagsFormatted);
+        const randomRecordString = `${randomRecordName}, ${randomRecordLocation} ${randomRecordCountry}. ${randomRecordDate}. Tagged with ${randomRecordTagsFormatted}.`
+        console.log(randomRecordString);
+
+        const randomRecordImageUrl = randomRecord.get("images")[0].url;
+        // Convert randomRecordImageUrl to base64 for tweeting
+        imageToBase64(randomRecordImageUrl) // Image URL
+            .then(
+                (response) => {
+                    // Image is now converted, prepare tweet
+                    tweetIt(randomRecordString, response);
+                }
+            )
+            .catch(
+                (error) => {
+                    console.log(error);
+                }
+            )
     });
-
-
-    // To fetch the next page of records, call `fetchNextPage`.
-    // If there are more records, `page` will get called again.
-    // If there are no more records, `done` will get called.
-    fetchNextPage();
-
-}, function done(err) {
-    if (err) { console.error(err); return; }
-    // If successful...
-    // Get a random record for later tweeting
-    const randomRecord = allRecords[Math.floor(Math.random() * allRecords.length)];
-    // return randomRecord;
-    const randomRecordName = randomRecord.get("name");
-    const randomRecordDate = randomRecord.get("date");
-    const randomRecordLocation = randomRecord.get("location");
-    const randomRecordCountry = randomRecord.get("country");
-    const randomRecordTags = randomRecord.get("tags");
-    const randomRecordTagsFormatted = randomRecordTags.join(", ")
-    // console.log(randomRecordTagsFormatted);
-    const randomRecordString = `${randomRecordName}, ${randomRecordLocation} ${randomRecordCountry}. ${randomRecordDate}. Tagged with ${randomRecordTagsFormatted}.`
-    console.log(randomRecordString);
-
-    const randomRecordImageUrl = randomRecord.get("images")[0].url;
-    // Convert randomRecordImageUrl to base64 for tweeting
-    imageToBase64(randomRecordImageUrl) // Image URL
-        .then(
-            (response) => {
-                // Image is now converted, prepare tweet
-                tweetIt(randomRecordString, response);
-            }
-        )
-        .catch(
-            (error) => {
-                console.log(error);
-            }
-        )
-});
+}
 
 
 // // Run instantly
@@ -115,3 +117,5 @@ function tweetIt(tweetText, b64content) {
         }
     }
 }
+
+tweetFromAirtable();
