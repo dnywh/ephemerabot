@@ -4,6 +4,12 @@ require("dotenv").config();
 // Allow for scheduling
 const schedule = require('node-schedule');
 
+// Allow for Jimp usage
+const Jimp = require('jimp');
+
+// Allow for sharp usage
+const sharp = require('sharp');
+
 // Allow for image conversion
 const imageToBase64 = require('image-to-base64');
 
@@ -15,7 +21,6 @@ const T = new Twit({
     access_token: process.env.TWITTER_ACCESS_TOKEN,
     access_token_secret: process.env.TWITTER_ACCESS_SECRET
 });
-
 
 // Get Airtable going
 const base = require("airtable").base(process.env.AIRTABLE_BASE_ID);
@@ -57,30 +62,45 @@ function tweetRandomAirtableRecord() {
         const recordTagsFormatted = recordTagsHashed.join(", ")
 
         const recordString = `${recordName}. ${recordLocation}, ${recordCountry}. ${recordDate}. Tagged with ${recordTagsFormatted}.`
-        console.log(recordString);
+        // console.log(recordString);
 
         const recordImageUrl = record.get("images")[0].url;
         // Convert recordImageUrl to base64 for tweeting
-        imageToBase64(recordImageUrl) // Image URL
-            .then(
-                (response) => {
-                    // Image is now converted, prepare tweet
-                    tweetIt(recordString, response);
+        // imageToBase64(recordImageUrl) // Image URL
+        //     .then(
+        //         (response) => {
+        //             // Image is now converted, prepare tweet
+        //             tweetIt(recordString, response);
+        //         }
+        //     )
+        //     .catch(
+        //         (error) => {
+        //             console.log(error);
+        //         }
+        //     )
+
+        const test = prepareImage();
+        const imageTest =
+            sharp({
+                create: {
+                    width: 2048,
+                    height: 1024,
+                    channels: 4,
+                    background: { r: 255, g: 0, b: 0, alpha: 0.5 }
                 }
-            )
-            .catch(
-                (error) => {
-                    console.log(error);
-                }
-            )
+            })
+                .png()
+                .toBuffer()
+
+        tweetIt(recordString, imageTest.toString('base64'));
     });
 }
-
-function tweetIt(tweetText, b64content) {
+// function tweetIt(tweetText, b64content) {
+function tweetIt(tweetText, tweetImage) {
     // TODO: Run Airtable from within here?
 
     // Upload image
-    T.post('media/upload', { media_data: b64content }, uploaded);
+    T.post('media/upload', { media_data: tweetImage }, uploaded);
 
     // Once image is uploaded on Twitter
     function uploaded(err, data, response) {
@@ -104,6 +124,39 @@ function tweetIt(tweetText, b64content) {
         }
     }
 }
+
+// Prepare image
+function prepareImage() {
+    new Jimp(2048, 1024, "#FFFFFF", (err, image) => {
+        if (err) throw err;
+        else {
+            image.getBase64Async(Jimp.MIME_JPEG, function (err, src) {
+                // console.log("rb is \n")
+                // console.log(src);
+                return src;
+            })
+        }
+    });
+}
+
+// Attempt 2
+// Create a blank 300x200 PNG image of semi-transluent red pixels
+const imageTest =
+    sharp({
+        create: {
+            width: 2048,
+            height: 1024,
+            channels: 4,
+            background: { r: 255, g: 0, b: 0, alpha: 0.5 }
+        }
+    })
+        .png()
+        .toBuffer()
+
+// prepareImage()
+console.log(imageTest.toString('base64'));
+
+// .then(... );
 
 // Run instantly
 tweetRandomAirtableRecord();
