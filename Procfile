@@ -1,1 +1,1 @@
-worker: node -r dotenv/config server.js 
+worker: npm start
