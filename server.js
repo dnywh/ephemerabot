@@ -4,6 +4,8 @@ require("dotenv").config();
 // Allow for scheduling
 const schedule = require('node-schedule');
 
+const imageToBase64 = require('image-to-base64');
+
 // Initiate Twit
 const Twit = require('twit');
 const T = new Twit({
@@ -45,7 +47,7 @@ base(table).select({
     // If successful...
     // Get a random record for later tweeting
     const randomRecord = allRecords[Math.floor(Math.random() * allRecords.length)];
-
+    // return randomRecord;
     const randomRecordName = randomRecord.get("name");
     const randomRecordDate = randomRecord.get("date");
     const randomRecordLocation = randomRecord.get("location");
@@ -53,58 +55,58 @@ base(table).select({
     const randomRecordTags = randomRecord.get("tags");
     const randomRecordTagsFormatted = randomRecordTags.join(", ")
     // console.log(randomRecordTagsFormatted);
-    const randomRecordImage = randomRecord.get("images")[0].url;
-    // TODO: convert randomRecordImage to base64 for tweeting
-
     const randomRecordString = `${randomRecordName}, ${randomRecordLocation} ${randomRecordCountry}. ${randomRecordDate}. Tagged with ${randomRecordTagsFormatted}.`
     console.log(randomRecordString);
 
-
-    // Run instantly
-    tweetIt(randomRecordString);
-    // Then run again every hour
-    // setInterval(tweetIt(randomRecordString), 1000 * 60 * 60);
-    // Run every day at 8am
-    schedule.scheduleJob("0 0 8 1/1 * ? *", function () {
-        tweetIt(randomRecordString);
-    })
-
+    const randomRecordImageUrl = randomRecord.get("images")[0].url;
+    // Convert randomRecordImageUrl to base64 for tweeting
+    imageToBase64(randomRecordImageUrl) // Image URL
+        .then(
+            (response) => {
+                // Image is now converted, prepare tweet
+                tweetIt(randomRecordString, response);
+            }
+        )
+        .catch(
+            (error) => {
+                console.log(error);
+            }
+        )
 });
 
-// TODO: random ephemera of the week
+
+// // Run instantly
+
+// // Then run again every hour
+// // setInterval(tweetIt(randomRecordString), 1000 * 60 * 60);
+// // Run every day at 8am
+// schedule.scheduleJob("0 0 8 1/1 * ? *", function () {
+//     tweetIt(randomRecordString);
+// })
+
+// TODO: random ephemera of the week (Throwback Thursday)
 
 
-function tweetIt(tweetText, tweetImage) {
-    // const r = Math.floor(Math.random() * 100);
-    // Insert tweet
-    const tweet = {
-        // status: `Random number of the hour is ${r}`
-        status: tweetText,
-        // media_ids: [tweetImage]
-        // lat: 37.7821120598956,
-        // long: -122.400612831116
-    }
+function tweetIt(tweetText, b64content) {
+    // TODO: Run Airtable from within here?
 
-    console.log(tweet);
+    // Upload image
+    T.post('media/upload', { media_data: b64content }, uploaded);
 
-    T.get('account/verify_credentials', {
-        include_entities: false,
-        skip_status: true,
-        include_email: false
-    }, onAuthenticated)
-
-    // Run authentication
-    function onAuthenticated(err, res) {
-        if (err) {
-            throw err
+    // Once image is uploaded on Twitter
+    function uploaded(err, data, response) {
+        // Prepare tweet content
+        const tweetContent = {
+            status: tweetText,
+            // Put Twitter's image ID into an array
+            media_ids: new Array(data.media_id_string)
         }
 
-        console.log('Authentication successful. Running bot...\r\n')
-
-        // Send tweet
-        T.post('statuses/update', tweet, onTweeted)
+        // Tweet it!
+        T.post('statuses/update', tweetContent, onTweeted);
     }
 
+    // After the tweet has been sent...
     function onTweeted(err, reply) {
         if (err !== undefined) {
             console.log(err)
