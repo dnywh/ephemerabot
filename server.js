@@ -22,10 +22,8 @@ const base = require("airtable").base(process.env.AIRTABLE_BASE_ID);
 const table = "Main";
 const allRecords = []
 
-function tweetFromAirtable() {
+function tweetRandomAirtableRecord() {
     base(table).select({
-        // Selecting the first 3 records in Grid:
-        // maxRecords: 3,
         view: "Grid",
         filterByFormula: "({hidden}= '')", // Only show items that are not hidden
         sort: [{ field: "date", direction: "desc" }], // Overrides what's set in the above view, just in case I forget
@@ -46,9 +44,8 @@ function tweetFromAirtable() {
     }, function done(err) {
         if (err) { console.error(err); return; }
         // If successful...
-        // Get a random record for later tweeting
+        // Select a random record for tweeting
         const record = allRecords[Math.floor(Math.random() * allRecords.length)];
-        // return record;
         const recordName = record.get("name");
         const recordDate = record.get("date");
         const recordLocation = record.get("location");
@@ -109,13 +106,15 @@ function tweetIt(tweetText, b64content) {
 }
 
 // Run instantly
-tweetFromAirtable();
+tweetRandomAirtableRecord();
+// Run every thirty minutes
+schedule.scheduleJob("0 0/30 * 1/1 * ? *", function () {
+    tweetRandomAirtableRecord();
+})
 
-// // Then run again every hour
-// // setInterval(tweetFromAirtable(), 1000 * 60 * 60);
-// // Run every day at 8am
-// schedule.scheduleJob("0 0 8 1/1 * ? *", function () {
-//     tweetFromAirtable();
+// TODO: fork Airtable function to produce random tweet (keep old random tweet generator)
+// Throwback Thursday
+// Tweet every Thursday morning at 8am
+// schedule.scheduleJob("0 0 8 ? * THU *", function () {
+//     tweetRandomAirtableRecord();
 // })
-
-// TODO: random ephemera of the week (Throwback Thursday)
