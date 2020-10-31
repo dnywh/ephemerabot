@@ -47,25 +47,28 @@ function tweetFromAirtable() {
         if (err) { console.error(err); return; }
         // If successful...
         // Get a random record for later tweeting
-        const randomRecord = allRecords[Math.floor(Math.random() * allRecords.length)];
-        // return randomRecord;
-        const randomRecordName = randomRecord.get("name");
-        const randomRecordDate = randomRecord.get("date");
-        const randomRecordLocation = randomRecord.get("location");
-        const randomRecordCountry = randomRecord.get("country");
-        const randomRecordTags = randomRecord.get("tags");
-        const randomRecordTagsFormatted = randomRecordTags.join(", ")
-        // console.log(randomRecordTagsFormatted);
-        const randomRecordString = `${randomRecordName}, ${randomRecordLocation} ${randomRecordCountry}. ${randomRecordDate}. Tagged with ${randomRecordTagsFormatted}.`
-        console.log(randomRecordString);
+        const record = allRecords[Math.floor(Math.random() * allRecords.length)];
+        // return record;
+        const recordName = record.get("name");
+        const recordDate = record.get("date");
+        const recordLocation = record.get("location");
+        const recordCountry = record.get("country");
+        const recordTags = record.get("tags");
+        // Add a hastag to the start of each tag array item
+        const recordTagsHashed = recordTags.map(i => "#" + i)
+        // Format these items in a list
+        const recordTagsFormatted = recordTagsHashed.join(", ")
 
-        const randomRecordImageUrl = randomRecord.get("images")[0].url;
-        // Convert randomRecordImageUrl to base64 for tweeting
-        imageToBase64(randomRecordImageUrl) // Image URL
+        const recordString = `${recordName}. ${recordLocation}, ${recordCountry}. ${recordDate}. Tagged with ${recordTagsFormatted}.`
+        console.log(recordString);
+
+        const recordImageUrl = record.get("images")[0].url;
+        // Convert recordImageUrl to base64 for tweeting
+        imageToBase64(recordImageUrl) // Image URL
             .then(
                 (response) => {
                     // Image is now converted, prepare tweet
-                    tweetIt(randomRecordString, response);
+                    tweetIt(recordString, response);
                 }
             )
             .catch(
@@ -75,19 +78,6 @@ function tweetFromAirtable() {
             )
     });
 }
-
-
-// // Run instantly
-
-// // Then run again every hour
-// // setInterval(tweetIt(randomRecordString), 1000 * 60 * 60);
-// // Run every day at 8am
-// schedule.scheduleJob("0 0 8 1/1 * ? *", function () {
-//     tweetIt(randomRecordString);
-// })
-
-// TODO: random ephemera of the week (Throwback Thursday)
-
 
 function tweetIt(tweetText, b64content) {
     // TODO: Run Airtable from within here?
@@ -118,4 +108,14 @@ function tweetIt(tweetText, b64content) {
     }
 }
 
+// Run instantly
 tweetFromAirtable();
+
+// // Then run again every hour
+// // setInterval(tweetFromAirtable(), 1000 * 60 * 60);
+// // Run every day at 8am
+// schedule.scheduleJob("0 0 8 1/1 * ? *", function () {
+//     tweetFromAirtable();
+// })
+
+// TODO: random ephemera of the week (Throwback Thursday)
