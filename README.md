@@ -3,3 +3,11 @@
 # Ephemerabot
 
 A Twitter bot for [ephemera](https://github.com/dnywh/ephemera), a digital archive of analogue bits and bobs.
+
+## Using this
+
+Push changes to Heroku:
+
+```
+git push heroku main
+```

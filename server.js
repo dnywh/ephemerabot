@@ -10,28 +10,45 @@ const T = new Twit({
     access_token_secret: process.env.ACCESS_SECRET
 });
 
-T.get('account/verify_credentials', {
-    include_entities: false,
-    skip_status: true,
-    include_email: false
-}, onAuthenticated)
+// Run instantly
+// tweetIt();
+// Then run again every minute
+setInterval(tweetIt, 1000 * 60 * 0.5);
 
-function onAuthenticated(err, res) {
-    if (err) {
-        throw err
+// Define tweet
+function tweetIt() {
+    const r = Math.floor(Math.random() * 100);
+    // Insert tweet
+    const tweet = {
+        status: `Random number of the moment is ${r}`
     }
 
-    console.log('Authentication successful. Running bot...\r\n')
+    T.get('account/verify_credentials', {
+        include_entities: false,
+        skip_status: true,
+        include_email: false
+    }, onAuthenticated)
 
-    T.post('statuses/update', {
-        status: "Hello from @ephemerabot using env variables."
-    }, onTweeted)
-}
+    // Run authentication
+    function onAuthenticated(err, res) {
+        if (err) {
+            throw err
+        }
 
-function onTweeted(err, reply) {
-    if (err !== undefined) {
-        console.log(err)
-    } else {
-        console.log('Tweeted: ' + reply.text)
+        console.log('Authentication successful. Running bot...\r\n')
+
+        // Send tweet
+        T.post('statuses/update', tweet, onTweeted)
+    }
+
+    function onTweeted(err, reply) {
+        if (err !== undefined) {
+            console.log(err)
+        } else {
+            console.log('Tweeted: ' + reply.text)
+        }
     }
 }
+
+
+tweetIt();
