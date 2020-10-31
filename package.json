@@ -1,0 +1,27 @@
+{
+  "name": "ephemerabot",
+  "version": "1.0.0",
+  "description": "A Twitter bot for Ephemera",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node -r dotenv/config server.js"
+  },
+  "keywords": [
+    "ephemera",
+    "airtable",
+    "node",
+    "express",
+    "data",
+    "api",
+    "twitter",
+    "twitter bot",
+    "bot"
+  ],
+  "author": "Danny White",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "twit": "^2.2.11"
+  }
+}
