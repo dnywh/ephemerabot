@@ -2,7 +2,7 @@
 require("dotenv").config();
 
 // Allow for scheduling
-import schedule from 'node-schedule'
+const schedule = require('node-schedule');
 
 // Initiate Twit
 const Twit = require('twit');
@@ -48,15 +48,20 @@ base(table).select({
 
     const randomRecordName = randomRecord.get("name");
     const randomRecordDate = randomRecord.get("date");
+    const randomRecordLocation = randomRecord.get("location");
+    const randomRecordCountry = randomRecord.get("country");
+    const randomRecordTags = randomRecord.get("tags");
+    const randomRecordTagsFormatted = randomRecordTags.join(", ")
+    // console.log(randomRecordTagsFormatted);
     const randomRecordImage = randomRecord.get("images")[0].url;
     // TODO: convert randomRecordImage to base64 for tweeting
 
-    const randomRecordString = `${randomRecordName} from ${randomRecordDate}`
-
+    const randomRecordString = `${randomRecordName}, ${randomRecordLocation} ${randomRecordCountry}. ${randomRecordDate}. Tagged with ${randomRecordTagsFormatted}.`
+    console.log(randomRecordString);
 
 
     // Run instantly
-    // tweetIt(randomRecordString);
+    tweetIt(randomRecordString);
     // Then run again every hour
     // setInterval(tweetIt(randomRecordString), 1000 * 60 * 60);
     // Run every day at 8am
