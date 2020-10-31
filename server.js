@@ -23,6 +23,8 @@ function tweetIt() {
         status: `Random number of the moment is ${r}`
     }
 
+    console.log(tweet);
+
     T.get('account/verify_credentials', {
         include_entities: false,
         skip_status: true,
