@@ -149,19 +149,19 @@ function prepareImage(imageUrl) {
 // tweetRandomEphemera();
 
 // TODO: Check Airtable for new record, 8am daily. Then tweet any new records
-// schedule.scheduleJob("0 0 8 1/1 * ? *", function () {
+// schedule.scheduleJob("0 8 * * *", function () {
 //     checkAndTweetNewEphemera();
 // });
 
 // TODO: fork Airtable function to produce random tweet (keep old random tweet generator)
 // Throwback Thursday
 // Tweet every Thursday morning at 8am
-// schedule.scheduleJob("0 0 8 ? * THU *", function () {
+// schedule.scheduleJob("0 8 * * THU", function () {
 //     tweetRandomEphemera();
 // })
 // Until then...
 // Run every day at 8am
 // Syntax: http://www.cronmaker.com/
-schedule.scheduleJob("0 0 8 1/1 * ? *", function () {
+schedule.scheduleJob("0 8 * * *", function () {
     tweetRandomEphemera();
 });
