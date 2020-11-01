@@ -1,14 +1,11 @@
 // Get env variables up and running
 require("dotenv").config();
 
-// Allow for scheduling
+// Allow for scheduling tweets
 const schedule = require('node-schedule');
 
-// Allow for Jimp usage
+// Allow for editing images
 const Jimp = require('jimp');
-
-// Allow for sharp usage
-const sharp = require('sharp');
 
 // Allow for image conversion
 const imageToBase64 = require('image-to-base64');
@@ -36,7 +33,7 @@ function tweetRandomAirtableRecord() {
         // This function (`page`) will get called for each page of records.
 
         records.forEach(function (record) {
-            // console.log('Retrieved', record.get('name'));
+            // Push each record to the array
             allRecords.push(record);
         });
 
@@ -56,43 +53,44 @@ function tweetRandomAirtableRecord() {
         const recordLocation = record.get("location");
         const recordCountry = record.get("country");
         const recordTags = record.get("tags");
-        // Add a hastag to the start of each tag array item
-        const recordTagsHashed = recordTags.map(i => "#" + i)
-        // Format these items in a list
-        const recordTagsFormatted = recordTagsHashed.join(", ")
+        // Remove dashes/hyphens from each tag array item
+        const recordTagsDashed = recordTags.map(i => i.replace(/-/g, ""));
+        // Add a hashtag to the start of each tag array item
+        const recordTagsHashed = recordTagsDashed.map(i => "#" + i);
+        // Format this array into one comma-separated string
+        const recordTagsFormatted = recordTagsHashed.join(", ");
 
         const recordString = `${recordName}. ${recordLocation}, ${recordCountry}. ${recordDate}. Tagged with ${recordTagsFormatted}.`
         // console.log(recordString);
 
         const recordImageUrl = record.get("images")[0].url;
+        // Compose image
+        prepareImage(`${recordImageUrl}`);
         // Convert recordImageUrl to base64 for tweeting
-        // imageToBase64(recordImageUrl) // Image URL
-        //     .then(
-        //         (response) => {
-        //             // Image is now converted, prepare tweet
-        //             tweetIt(recordString, response);
-        //         }
-        //     )
-        //     .catch(
-        //         (error) => {
-        //             console.log(error);
-        //         }
-        //     )
-
-        const test = prepareImage();
-        const imageTest =
-            sharp({
-                create: {
-                    width: 2048,
-                    height: 1024,
-                    channels: 4,
-                    background: { r: 255, g: 0, b: 0, alpha: 0.5 }
+        imageToBase64("tweet-img.jpg") // Image URL
+            .then(
+                (response) => {
+                    // Image is now converted, prepare tweet
+                    // tweetIt(recordString, response);
                 }
-            })
-                .png()
-                .toBuffer()
-
-        tweetIt(recordString, imageTest.toString('base64'));
+            )
+            .catch(
+                (error) => {
+                    console.log(error);
+                }
+            )
+        imageToBase64(recordImageUrl) // Image URL
+            .then(
+                (response) => {
+                    // Image is now converted, prepare tweet
+                    tweetIt(recordString, response);
+                }
+            )
+            .catch(
+                (error) => {
+                    console.log(error);
+                }
+            )
     });
 }
 // function tweetIt(tweetText, b64content) {
@@ -126,48 +124,19 @@ function tweetIt(tweetText, tweetImage) {
 }
 
 // Prepare image
-function prepareImage() {
-    new Jimp(2048, 1024, "#FFFFFF", (err, image) => {
+function prepareImage(imageUrl) {
+    Jimp.read(imageUrl, (err, image) => {
         if (err) throw err;
-        else {
-            image.getBase64Async(Jimp.MIME_JPEG, function (err, src) {
-                // console.log("rb is \n")
-                // console.log(src);
-                return src;
-            })
-        }
+        image
+            .background(0xFFFFFFFF)
+            .contain(2048, 1024)
+            // .crop(4000, 3000)
+            .write("tweet-img.jpg"); // save
     });
 }
-
-// Attempt 2
-// Create a blank 300x200 PNG image of semi-transluent red pixels
-const imageTest =
-    sharp({
-        create: {
-            width: 2048,
-            height: 1024,
-            channels: 4,
-            background: { r: 255, g: 0, b: 0, alpha: 0.5 }
-        }
-    })
-        .png()
-        .toBuffer()
-
-// prepareImage()
-console.log(imageTest.toString('base64'));
-
-// .then(... );
-
 // Run instantly
 tweetRandomAirtableRecord();
 // Run every thirty minutes
 schedule.scheduleJob("0 0/30 * 1/1 * ? *", function () {
     tweetRandomAirtableRecord();
-})
-
-// TODO: fork Airtable function to produce random tweet (keep old random tweet generator)
-// Throwback Thursday
-// Tweet every Thursday morning at 8am
-// schedule.scheduleJob("0 0 8 ? * THU *", function () {
-//     tweetRandomAirtableRecord();
-// })
+});
