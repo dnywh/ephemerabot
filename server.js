@@ -21,7 +21,7 @@ const base = require("airtable").base(process.env.AIRTABLE_BASE_ID);
 const table = "Main";
 const allRecords = []
 
-function tweetRandomAirtableRecord() {
+function tweetRandomEphemera() {
     base(table).select({
         view: "Grid",
         filterByFormula: "({hidden}= '')", // Only show items that are not hidden
@@ -145,9 +145,22 @@ function prepareImage(imageUrl) {
 }
 
 // Run instantly
-tweetRandomAirtableRecord();
-// Run every thirty minutes
+// tweetRandomEphemera();
+
+// TODO: Check Airtable for new record, 8am daily. Then tweet any new records
+// schedule.scheduleJob("0 0 8 1/1 * ? *", function () {
+//     checkAndTweetNewEphemera();
+// });
+
+// TODO: fork Airtable function to produce random tweet (keep old random tweet generator)
+// Throwback Thursday
+// Tweet every Thursday morning at 8am
+// schedule.scheduleJob("0 0 8 ? * THU *", function () {
+//     tweetRandomEphemera();
+// })
+// Until then...
+// Run every day at 8am
 // Syntax: http://www.cronmaker.com/
-schedule.scheduleJob("0 0/30 * 1/1 * ? *", function () {
-    tweetRandomAirtableRecord();
+schedule.scheduleJob("0 0 8 1/1 * ? *", function () {
+    tweetRandomEphemera();
 });
