@@ -69,8 +69,7 @@ function tweetRandomAirtableRecord() {
 
         const recordImageUrl = record.get("images")[0].url;
 
-
-        prepareImage(recordImageUrl, recordDate, recordLocationAndCountry, recordName, recordTagsHashed)
+        prepareImage(recordImageUrl)
             .then((value) => {
                 // Trim off extraenous bits that Jimp adds to base64
                 const recordImage = value.substring(23, value.length);
@@ -111,36 +110,22 @@ function tweetIt(tweetText, tweetImage) {
 }
 
 // Prepare image
-function prepareImage(imageUrl, textDate, textLocation, textTitle, textTags) {
+function prepareImage(imageUrl) {
     return new Promise((resolve, reject) => {
         // Create the white frame
         // Set to 2048x1024 to match Twitter's preferred 1024x512 ratio
         new Jimp(2048, 1024, '#FFFFFF', (err, frame) => {
             if (err) throw err;
 
-            const maxTextWidth = 662;
-
-            Jimp.loadFont(Jimp.FONT_SANS_32_BLACK).then(font => {
-                frame.print(font, 1166, 280, textDate);
-                frame.print(font, 1166, 360, textLocation, maxTextWidth);
-            });
-            Jimp.loadFont(Jimp.FONT_SANS_16_BLACK).then(font => {
-                frame.print(font, 1166, 512, textTitle, maxTextWidth);
-
-                textTags.map(i => frame.print(font, 1166, 622 + (i * 10), i, maxTextWidth))
-            });
-
-
             // Then read the ephemera image
             Jimp.read(imageUrl, (err, image) => {
                 if (err) throw err;
 
                 // Resize image to have a maxium dimension of 60%
-                image.scaleToFit(772, 704);
-
+                image.scaleToFit(2048, 1024 * 0.60);
 
                 // Calculate coordinates to center image
-                const x = 220;
+                const x = Math.floor((frame.bitmap.width - image.bitmap.width) / 2);
                 const y = Math.floor((frame.bitmap.height - image.bitmap.height) / 2);
 
                 // Compostite image onto the frame
@@ -162,6 +147,7 @@ function prepareImage(imageUrl, textDate, textLocation, textTitle, textTags) {
 // Run instantly
 tweetRandomAirtableRecord();
 // Run every thirty minutes
+// Syntax: http://www.cronmaker.com/
 schedule.scheduleJob("0 0/30 * 1/1 * ? *", function () {
     tweetRandomAirtableRecord();
 });
