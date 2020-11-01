@@ -65,32 +65,16 @@ function tweetRandomAirtableRecord() {
 
         const recordImageUrl = record.get("images")[0].url;
         // Compose image
-        prepareImage(`${recordImageUrl}`);
-        // Convert recordImageUrl to base64 for tweeting
-        imageToBase64("tweet-img.jpg") // Image URL
-            .then(
-                (response) => {
-                    // Image is now converted, prepare tweet
-                    // tweetIt(recordString, response);
-                }
-            )
-            .catch(
-                (error) => {
-                    console.log(error);
-                }
-            )
-        imageToBase64(recordImageUrl) // Image URL
-            .then(
-                (response) => {
-                    // Image is now converted, prepare tweet
-                    tweetIt(recordString, response);
-                }
-            )
-            .catch(
-                (error) => {
-                    console.log(error);
-                }
-            )
+        prepareImage(recordImageUrl).then((preparedImageUrl) => {
+            // Convert recordImageUrl to base64 for tweeting
+            console.log(imageToBase64(preparedImageUrl))
+            resolve(imageToBase64(preparedImageUrl))
+        }).then((response) => {
+            console.log(response)
+            // Image is now converted, prepare tweet
+            tweetIt(recordString, response);
+        }
+        )
     });
 }
 // function tweetIt(tweetText, b64content) {
@@ -102,6 +86,7 @@ function tweetIt(tweetText, tweetImage) {
 
     // Once image is uploaded on Twitter
     function uploaded(err, data, response) {
+        if (err) console.log(err);
         // Prepare tweet content
         const tweetContent = {
             status: tweetText,
@@ -125,14 +110,34 @@ function tweetIt(tweetText, tweetImage) {
 
 // Prepare image
 function prepareImage(imageUrl) {
-    Jimp.read(imageUrl, (err, image) => {
-        if (err) throw err;
-        image
-            .background(0xFFFFFFFF)
-            .contain(2048, 1024)
-            // .crop(4000, 3000)
-            .write("tweet-img.jpg"); // save
-    });
+    return new Promise((resolve, reject) => {
+
+        // Create the white frame
+        // Set to 2048x1024 to match Twitter's preferred 1024x512 ratio
+        new Jimp(2048, 1024, '#FFFFFF', (err, frame) => {
+            if (err) throw err;
+
+            // Then read the ephemera image
+            Jimp.read(imageUrl, (err, image) => {
+                if (err) reject(err);
+
+                // Resize image to have a maxium height of 60%
+                image.resize(Jimp.AUTO, 1024 * 0.60);
+
+                // Calculate coordinates to center shape
+                const x = Math.floor((frame.bitmap.width - image.bitmap.width) / 2);
+                const y = Math.floor((frame.bitmap.height - image.bitmap.height) / 2);
+
+                // Compostite image onto the frame
+                frame.composite(image, x, y)
+                    // Write the final image to file
+                    .write("tweet-img.jpg");
+                // Return it
+                resolve("tweet-img.jpg")
+            });
+        });
+    })
+
 }
 // Run instantly
 tweetRandomAirtableRecord();
@@ -140,3 +145,19 @@ tweetRandomAirtableRecord();
 schedule.scheduleJob("0 0/30 * 1/1 * ? *", function () {
     tweetRandomAirtableRecord();
 });
+
+
+// let p = new Promise((resolve, reject) => {
+//     let a = 1 + 1
+//     if (a == 2) {
+//         resolve("Success")
+//     } else {
+//         reject("Failed")
+//     }
+// })
+
+// p.then((message) => {
+//     console.log(`The message is: ${message}`)
+// }).catch((message) => {
+//     console.log("This is in the catch" + message)
+// })
