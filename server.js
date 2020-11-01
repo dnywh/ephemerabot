@@ -61,20 +61,22 @@ function tweetRandomAirtableRecord() {
         const recordTagsFormatted = recordTagsHashed.join(", ");
 
         const recordString = `${recordName}. ${recordLocation}, ${recordCountry}. ${recordDate}. Tagged with ${recordTagsFormatted}.`
-        // console.log(recordString);
 
         const recordImageUrl = record.get("images")[0].url;
+
+
         // Compose image
-        prepareImage(recordImageUrl).then((preparedImageUrl) => {
-            // Convert recordImageUrl to base64 for tweeting
-            console.log(imageToBase64(preparedImageUrl))
-            resolve(imageToBase64(preparedImageUrl))
-        }).then((response) => {
-            console.log(response)
-            // Image is now converted, prepare tweet
-            tweetIt(recordString, response);
-        }
-        )
+        prepareImage(recordImageUrl)
+            .then((value) => {
+                // Convert recordImageUrl to base64 for tweeting
+                imageToBase64(value)
+            })
+            .then((response) => {
+                // Image is now converted, prepare tweet
+                // Get this to log out, then I can reenable the below tweetIt function
+                console.log(response);
+                // tweetIt(recordString, response);
+            })
     });
 }
 // function tweetIt(tweetText, b64content) {
@@ -111,7 +113,6 @@ function tweetIt(tweetText, tweetImage) {
 // Prepare image
 function prepareImage(imageUrl) {
     return new Promise((resolve, reject) => {
-
         // Create the white frame
         // Set to 2048x1024 to match Twitter's preferred 1024x512 ratio
         new Jimp(2048, 1024, '#FFFFFF', (err, frame) => {
@@ -121,8 +122,8 @@ function prepareImage(imageUrl) {
             Jimp.read(imageUrl, (err, image) => {
                 if (err) reject(err);
 
-                // Resize image to have a maxium height of 60%
-                image.resize(Jimp.AUTO, 1024 * 0.60);
+                // Resize image to have a maxium dimension of 60%
+                image.scaleToFit(2048, 1024 * 0.60);
 
                 // Calculate coordinates to center shape
                 const x = Math.floor((frame.bitmap.width - image.bitmap.width) / 2);
@@ -132,12 +133,12 @@ function prepareImage(imageUrl) {
                 frame.composite(image, x, y)
                     // Write the final image to file
                     .write("tweet-img.jpg");
-                // Return it
+                // Resolve it
                 resolve("tweet-img.jpg")
             });
         });
-    })
 
+    })
 }
 // Run instantly
 tweetRandomAirtableRecord();
