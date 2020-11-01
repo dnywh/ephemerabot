@@ -8,6 +8,7 @@ const schedule = require('node-schedule');
 const Jimp = require('jimp');
 
 // Allow for image conversion
+// TODO; do this straight from Jimp
 const imageToBase64 = require('image-to-base64');
 
 // Initiate Twit
@@ -66,17 +67,23 @@ function tweetRandomAirtableRecord() {
 
 
         // Compose image
+        imageToBase64(recordImageUrl).then((response) => {
+            console.log(response.substring(0, 50))
+        })
         prepareImage(recordImageUrl)
             .then((value) => {
                 // Convert recordImageUrl to base64 for tweeting
-                imageToBase64(value)
+
+                // imageToBase64(value)
+                console.log(value.substring(0, 50));
+                // tweetIt(recordString, value);
             })
-            .then((response) => {
-                // Image is now converted, prepare tweet
-                // Get this to log out, then I can reenable the below tweetIt function
-                console.log(response);
-                // tweetIt(recordString, response);
-            })
+        // .then((response) => {
+        //     // Image is now converted, prepare tweet
+        //     // Get this to log out, then I can reenable the below tweetIt function
+        //     console.log(response);
+        //     // tweetIt(recordString, response);
+        // })
     });
 }
 // function tweetIt(tweetText, b64content) {
@@ -120,45 +127,36 @@ function prepareImage(imageUrl) {
 
             // Then read the ephemera image
             Jimp.read(imageUrl, (err, image) => {
-                if (err) reject(err);
+                // if (err) reject(err);
+                if (err) throw err;
 
                 // Resize image to have a maxium dimension of 60%
                 image.scaleToFit(2048, 1024 * 0.60);
 
-                // Calculate coordinates to center shape
+                // Calculate coordinates to center image
                 const x = Math.floor((frame.bitmap.width - image.bitmap.width) / 2);
                 const y = Math.floor((frame.bitmap.height - image.bitmap.height) / 2);
 
                 // Compostite image onto the frame
                 frame.composite(image, x, y)
                     // Write the final image to file
-                    .write("tweet-img.jpg");
-                // Resolve it
-                resolve("tweet-img.jpg")
+                    .write("tweet-img.jpg")
+                    .getBase64(Jimp.MIME_JPEG, (err, src) => {
+                        // Resolve it
+                        resolve(src)
+
+                    })
+                // // Resolve it
+                // resolve("tweet-img.jpg")
             });
         });
 
     })
 }
+
 // Run instantly
 tweetRandomAirtableRecord();
 // Run every thirty minutes
 schedule.scheduleJob("0 0/30 * 1/1 * ? *", function () {
     tweetRandomAirtableRecord();
 });
-
-
-// let p = new Promise((resolve, reject) => {
-//     let a = 1 + 1
-//     if (a == 2) {
-//         resolve("Success")
-//     } else {
-//         reject("Failed")
-//     }
-// })
-
-// p.then((message) => {
-//     console.log(`The message is: ${message}`)
-// }).catch((message) => {
-//     console.log("This is in the catch" + message)
-// })
