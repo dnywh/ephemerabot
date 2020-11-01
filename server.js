@@ -145,7 +145,7 @@ function prepareImage(imageUrl) {
 }
 
 // Run instantly
-// tweetRandomEphemera();
+tweetRandomEphemera();
 
 // TODO: Check Airtable for new record, 8am daily. Then tweet any new records
 // schedule.scheduleJob("0 0 8 1/1 * ? *", function () {
