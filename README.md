@@ -1,4 +1,4 @@
-![sample](https://user-images.githubusercontent.com/3104761/80896885-7346ed80-8d36-11ea-961f-59fee197bb59.jpg)
+<img src="https://user-images.githubusercontent.com/3104761/97854065-12cc5380-1d4d-11eb-832d-8cbf3e8654f4.jpg" alt="A robot made up of ticket stubs, receipts, and other analogue bits and bobs" width="128">
 
 # Ephemerabot
 
