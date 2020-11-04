@@ -22,31 +22,37 @@ const T = new Twit({
 // Get Airtable going
 const base = require("airtable").base(process.env.AIRTABLE_BASE_ID);
 const table = "Main";
-// Prepare array for storing previously tweeted ephemera
-// Store this in a file
-const previouslyTweetedEphemera = ["a", "b", "c", "d"]
-const previouslyTweetedEphemeraFormatted = JSON.stringify(previouslyTweetedEphemera, null, 4);
 
-const filePath = "message.json"
+
+// Prepare array for storing previously tweeted ephemera
+
+
+const filePath = "previouslyTweetedEphemera.json"
 
 // fs.writeFile(filePath, previouslyTweetedEphemeraFormatted, (err) => {
 //     if (err) throw err;
+// Write past ephemera items
 //     console.log('The file has been saved!');
 // });
 
-// const previouslyTweetedEphemeraRead = JSON.parse(filePath)
-
-fs.readFile(filePath, (err, data) => {
-    if (err) throw err;
-    console.log(JSON.parse(data));
-});
+// fs.readFile(filePath, (err, data) => {
+//     if (err) throw err;
+//     // Read past ephemera items
+//     console.log(JSON.parse(data));
+// });
 
 function tweetLatestEphemera() {
+    // Store this in a file
+    // const previouslyTweetedEphemera = ["a", "b", "c", "d"]
+    const previouslyTweetedEphemera = []
+    // const previouslyTweetedEphemeraFormatted = JSON.stringify(previouslyTweetedEphemera, null, 4);
+
+    // const allRecords = []
     // access today's date
-    const today = new Date();
-    const dd = today.getDate();
-    const mm = (today.getMonth() + 1);
-    const yyyy = today.getFullYear();
+    // const today = new Date();
+    // const dd = today.getDate();
+    // const mm = (today.getMonth() + 1);
+    // const yyyy = today.getFullYear();
     // console.log(dd, mm, yyyy)
 
     // (Automatically) check Airtable if there has been anything in the last 24 hours
@@ -57,14 +63,18 @@ function tweetLatestEphemera() {
         // filterByFormula: "({hidden}= ''), DATESTR({date}='2020-10-27')",
         // filterByFormula: "AND({hidden}= '', {country}='Australia')",
         // filterByFormula: "({hidden}= '')",
-        filterByFormula: "({date}='2019-03-17')",
+        // filterByFormula: "({date}='2019-03-17')",
+        filterByFormula: "({hidden}= '')", // Only show items that are not hidden
         sort: [{ field: "date", direction: "desc" }], // Overrides what's set in the above view, just in case I forget
     }).eachPage(function page(records, fetchNextPage) {
         // This function (`page`) will get called for each page of records.
         // console.log(allRecords)
         // console.log(Date.now().toISOString())
         records.forEach(function (record) {
-            console.log(record)
+            // console.log(record)
+            previouslyTweetedEphemera.push(record)
+
+
 
             // re
             // console.log(allRecords.includes(record))
@@ -76,7 +86,17 @@ function tweetLatestEphemera() {
         fetchNextPage();
 
     }, function done(err) {
+        console.log("Done sweeping pages...")
 
+
+
+
+        const previouslyTweetedEphemeraFormatted = JSON.stringify(previouslyTweetedEphemera, null, 4);
+        fs.writeFile(filePath, previouslyTweetedEphemeraFormatted, (err) => {
+            if (err) throw err;
+            // Write past ephemera items
+            console.log('The file has been saved!');
+        });
     });
 }
 
@@ -213,7 +233,7 @@ function prepareImage(imageUrl) {
 // Run instantly
 // Turn on only for debugging as Heroku seems to like pinging this
 // tweetThursdayRandomEphemera()
-// tweetLatestEphemera()
+tweetLatestEphemera()
 
 // // Throwback Thursday
 // // Tweet every Thursday morning at 8am GMT (6pm AEST, 7pm AEDT, 3am EST, midnight PST)
