@@ -1,6 +1,9 @@
 // Get env variables up and running
 require("dotenv").config();
 
+// Allow for saving stuff to the file system
+const fs = require("fs");
+
 // Allow for scheduling tweets
 const schedule = require("node-schedule");
 
@@ -19,8 +22,24 @@ const T = new Twit({
 // Get Airtable going
 const base = require("airtable").base(process.env.AIRTABLE_BASE_ID);
 const table = "Main";
-const latestRecords = []
-const allRecords = []
+// Prepare array for storing previously tweeted ephemera
+// Store this in a file
+const previouslyTweetedEphemera = ["a", "b", "c", "d"]
+const previouslyTweetedEphemeraFormatted = JSON.stringify(previouslyTweetedEphemera, null, 4);
+
+const filePath = "message.json"
+
+// fs.writeFile(filePath, previouslyTweetedEphemeraFormatted, (err) => {
+//     if (err) throw err;
+//     console.log('The file has been saved!');
+// });
+
+// const previouslyTweetedEphemeraRead = JSON.parse(filePath)
+
+fs.readFile(filePath, (err, data) => {
+    if (err) throw err;
+    console.log(JSON.parse(data));
+});
 
 function tweetLatestEphemera() {
     // access today's date
@@ -62,6 +81,9 @@ function tweetLatestEphemera() {
 }
 
 function tweetThursdayRandomEphemera() {
+    // Prepare array for all records
+    const allRecords = []
+
     base(table).select({
         view: "Grid",
         filterByFormula: "({hidden}= '')", // Only show items that are not hidden
@@ -191,17 +213,17 @@ function prepareImage(imageUrl) {
 // Run instantly
 // Turn on only for debugging as Heroku seems to like pinging this
 // tweetThursdayRandomEphemera()
-tweetLatestEphemera()
+// tweetLatestEphemera()
 
-// Throwback Thursday
-// Tweet every Thursday morning at 8am GMT (6pm AEST, 7pm AEDT, 3am EST, midnight PST)
-schedule.scheduleJob("0 8 * * THU", function () {
-    tweetThursdayRandomEphemera()
-})
+// // Throwback Thursday
+// // Tweet every Thursday morning at 8am GMT (6pm AEST, 7pm AEDT, 3am EST, midnight PST)
+// schedule.scheduleJob("0 8 * * THU", function () {
+//     tweetThursdayRandomEphemera()
+// })
 
-// TODO: Check Airtable for new record, 8am daily. Then tweet any new records
-// Run every day at 8am GMT (6pm AEST, 7pm AEDT, 3am EST, midnight PST)
-// Syntax: http://www.cronmaker.com/
-schedule.scheduleJob("0 8 * * *", function () {
-    tweetLatestEphemera()
-});
+// // TODO: Check Airtable for new record, 8am daily. Then tweet any new records
+// // Run every day at 8am GMT (6pm AEST, 7pm AEDT, 3am EST, midnight PST)
+// // Syntax: http://www.cronmaker.com/
+// schedule.scheduleJob("0 8 * * *", function () {
+//     tweetLatestEphemera()
+// });
