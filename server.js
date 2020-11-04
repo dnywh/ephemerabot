@@ -1,8 +1,10 @@
 // Get env variables up and running
 require("dotenv").config();
 
-// Allow for saving stuff to the file system
+// Allow for reading and writing ephemera records
 const fs = require("fs");
+// Prepare file
+const filePath = "previouslyTweetedEphemera.json"
 
 // Allow for scheduling tweets
 const schedule = require("node-schedule");
@@ -24,60 +26,39 @@ const base = require("airtable").base(process.env.AIRTABLE_BASE_ID);
 const table = "Main";
 
 
-// Prepare array for storing previously tweeted ephemera
-
-
-const filePath = "previouslyTweetedEphemera.json"
-
-// fs.writeFile(filePath, previouslyTweetedEphemeraFormatted, (err) => {
-//     if (err) throw err;
-// Write past ephemera items
-//     console.log('The file has been saved!');
-// });
-
-// fs.readFile(filePath, (err, data) => {
-//     if (err) throw err;
-//     // Read past ephemera items
-//     console.log(JSON.parse(data));
-// });
-
+// Function for tweeting a random Throwback Thursday ephemera item
 function tweetLatestEphemera() {
     // Store this in a file
-    // const previouslyTweetedEphemera = ["a", "b", "c", "d"]
     const previouslyTweetedEphemera = []
-    // const previouslyTweetedEphemeraFormatted = JSON.stringify(previouslyTweetedEphemera, null, 4);
+    const notYetTweetedEphemera = []
 
-    // const allRecords = []
-    // access today's date
-    // const today = new Date();
-    // const dd = today.getDate();
-    // const mm = (today.getMonth() + 1);
-    // const yyyy = today.getFullYear();
-    // console.log(dd, mm, yyyy)
-
-    // (Automatically) check Airtable if there has been anything in the last 24 hours
-    // Tweet this
-    // Reset 24 hour clock
     base(table).select({
         view: "Grid",
-        // filterByFormula: "({hidden}= ''), DATESTR({date}='2020-10-27')",
-        // filterByFormula: "AND({hidden}= '', {country}='Australia')",
-        // filterByFormula: "({hidden}= '')",
-        // filterByFormula: "({date}='2019-03-17')",
         filterByFormula: "({hidden}= '')", // Only show items that are not hidden
         sort: [{ field: "date", direction: "desc" }], // Overrides what's set in the above view, just in case I forget
     }).eachPage(function page(records, fetchNextPage) {
         // This function (`page`) will get called for each page of records.
-        // console.log(allRecords)
-        // console.log(Date.now().toISOString())
         records.forEach(function (record) {
-            // console.log(record)
+            // Check file if it already exists
+            fs.readFile(filePath, (err, data) => {
+                if (err) throw err;
+                // Prepare past ephemera items
+                const existingEphemera = JSON.parse(data)
+                // Compare this record against past ephemera items
+                if (existingEphemera.some(i => i.fields.name === record.fields.name)) {
+                    // If so, it has alreay been tweeted
+                    // console.log("Already a match. Must have been tweeted already")
+                } else {
+                    // If it doesn't exist, line it up to tweet
+                    console.log(`New ephemera to tweet: ${record.fields.name}`)
+                    notYetTweetedEphemera.push(record)
+                    return
+                }
+            });
+
+
+            // Now that any missing ephemera has been lined up to tweet 
             previouslyTweetedEphemera.push(record)
-
-
-
-            // re
-            // console.log(allRecords.includes(record))
         });
 
         // To fetch the next page of records, call `fetchNextPage`.
@@ -86,11 +67,51 @@ function tweetLatestEphemera() {
         fetchNextPage();
 
     }, function done(err) {
+        if (err) { console.error(err); return; }
+
+
         console.log("Done sweeping pages...")
+        // console.log(notYetTweetedEphemera)
+
+        // Tweet it
+
+        // Select a random record for tweeting
+        // const record = allRecords[Math.floor(Math.random() * allRecords.length)];
+
+        notYetTweetedEphemera.map(record => {
+            // console.log(record.fields.name)
+            // console.log(record.fields.date)
+            // Prepare record text
+            const recordText = prepareText(record, false)
+
+            // Prepare image
+            const recordImageUrl = record.get("images")[0].url;
+
+            prepareImage(recordImageUrl)
+                .then((value) => {
+                    // Trim off extraenous bits that Jimp adds to base64
+                    const recordImage = value.substring(23, value.length)
+                    // Prepare for tweeting
+                    tweetIt(recordText, recordImage)
+                    // End script
+                    return
+                })
+
+        })
 
 
 
 
+
+
+
+
+
+
+
+
+
+        // Add this tweeted thing to the file so it doesn't get tweeted again
         const previouslyTweetedEphemeraFormatted = JSON.stringify(previouslyTweetedEphemera, null, 4);
         fs.writeFile(filePath, previouslyTweetedEphemeraFormatted, (err) => {
             if (err) throw err;
@@ -100,6 +121,7 @@ function tweetLatestEphemera() {
     });
 }
 
+// Function for tweeting a random Throwback Thursday ephemera item
 function tweetThursdayRandomEphemera() {
     // Prepare array for all records
     const allRecords = []
@@ -123,34 +145,13 @@ function tweetThursdayRandomEphemera() {
 
     }, function done(err) {
         if (err) { console.error(err); return; }
-        // If successful...
         // Select a random record for tweeting
         const record = allRecords[Math.floor(Math.random() * allRecords.length)];
-        const recordName = record.get("name");
 
-        const recordDate = record.get("date");
-        // Format date so it can be later programatically changed
-        // Pass through the year, month, and day
-        const recordDateStructured = new Date(recordDate.substring(0, 4), (recordDate.substring(5, 7) - 1), recordDate.substring(8, 10));
-        // Use this to create a readable date format
-        const recordDateHuman = recordDateStructured.toLocaleString("default", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+        // Prepare record text with throwback text true
+        const recordText = prepareText(record, true)
 
-        const recordLocation = record.get("location");
-        const recordCountry = record.get("country");
-        const recordLocationAndCountry = `${recordLocation}, ${recordCountry}`
-        const recordTags = record.get("tags");
-        // Remove dashes/hyphens from each tag array item
-        const recordTagsDashed = recordTags.map(i => i.replace(/-/g, ""));
-        // Add a hashtag to the start of each tag array item
-        const recordTagsHashed = recordTagsDashed.map(i => "#" + i);
-        // Format this array into one comma-separated string
-        const recordTagsFormatted = recordTagsHashed.join(", ");
-
-        const recordString =
-            `${recordName}. ${recordLocationAndCountry}. ${recordDateHuman}. Tagged with ${recordTagsFormatted}.`
-        const throwbackString =
-            `Throwback Thursday:\n\n${recordString}`
-
+        // Prepare image
         const recordImageUrl = record.get("images")[0].url;
 
         prepareImage(recordImageUrl)
@@ -158,13 +159,27 @@ function tweetThursdayRandomEphemera() {
                 // Trim off extraenous bits that Jimp adds to base64
                 const recordImage = value.substring(23, value.length)
                 // Prepare for tweeting
-                tweetIt(throwbackString, recordImage)
+                tweetIt(recordText, recordImage)
                 // End script
                 return
             })
     });
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Function for seding out tweet
 function tweetIt(tweetText, tweetImage) {
     // TODO: Run Airtable from within here?
 
@@ -195,7 +210,41 @@ function tweetIt(tweetText, tweetImage) {
     }
 }
 
-// Prepare image
+// Function for preparing tweet text
+function prepareText(record, isThrowback) {
+
+    const recordName = record.get("name");
+    const recordDate = record.get("date");
+    // Format date so it can be programatically changed a few lines below
+    // Pass through the year, month, and day
+    const recordDateStructured = new Date(recordDate.substring(0, 4), (recordDate.substring(5, 7) - 1), recordDate.substring(8, 10));
+    // Use this to create a readable date format
+    const recordDateHuman = recordDateStructured.toLocaleString("default", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+
+    const recordLocation = record.get("location");
+    const recordCountry = record.get("country");
+    const recordLocationAndCountry = `${recordLocation}, ${recordCountry}`
+    const recordTags = record.get("tags");
+    // Remove dashes/hyphens from each tag array item
+    const recordTagsDashed = recordTags.map(i => i.replace(/-/g, ""));
+    // Add a hashtag to the start of each tag array item
+    const recordTagsHashed = recordTagsDashed.map(i => "#" + i);
+    // Format this array into one comma-separated string
+    const recordTagsFormatted = recordTagsHashed.join(", ");
+
+    const recordString =
+        `${recordName}. ${recordLocationAndCountry}. ${recordDateHuman}. Tagged with ${recordTagsFormatted}.`
+    const throwbackString =
+        `Throwback Thursday:\n\n${recordString}`
+
+    if (isThrowback) {
+        return throwbackString
+    } else {
+        return recordString
+    }
+}
+
+// Function for preparing tweet image
 function prepareImage(imageUrl) {
     return new Promise((resolve, reject) => {
         // Create the white frame
@@ -229,6 +278,8 @@ function prepareImage(imageUrl) {
 
     })
 }
+
+// Call main functions
 
 // Run instantly
 // Turn on only for debugging as Heroku seems to like pinging this
