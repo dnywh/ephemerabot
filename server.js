@@ -2,13 +2,13 @@
 require("dotenv").config();
 
 // Allow for scheduling tweets
-const schedule = require('node-schedule');
+const schedule = require("node-schedule");
 
 // Allow for image editing
-const Jimp = require('jimp');
+const Jimp = require("jimp");
 
 // Initiate Twit
-const Twit = require('twit');
+const Twit = require("twit");
 const T = new Twit({
     consumer_key: process.env.TWITTER_API_KEY,
     consumer_secret: process.env.TWITTER_API_SECRET_KEY,
@@ -19,9 +19,49 @@ const T = new Twit({
 // Get Airtable going
 const base = require("airtable").base(process.env.AIRTABLE_BASE_ID);
 const table = "Main";
+const latestRecords = []
 const allRecords = []
 
-function tweetRandomEphemera() {
+function tweetLatestEphemera() {
+    // access today's date
+    const today = new Date();
+    const dd = today.getDate();
+    const mm = (today.getMonth() + 1);
+    const yyyy = today.getFullYear();
+    // console.log(dd, mm, yyyy)
+
+    // (Automatically) check Airtable if there has been anything in the last 24 hours
+    // Tweet this
+    // Reset 24 hour clock
+    base(table).select({
+        view: "Grid",
+        // filterByFormula: "({hidden}= ''), DATESTR({date}='2020-10-27')",
+        // filterByFormula: "AND({hidden}= '', {country}='Australia')",
+        // filterByFormula: "({hidden}= '')",
+        filterByFormula: "({date}='2019-03-17')",
+        sort: [{ field: "date", direction: "desc" }], // Overrides what's set in the above view, just in case I forget
+    }).eachPage(function page(records, fetchNextPage) {
+        // This function (`page`) will get called for each page of records.
+        // console.log(allRecords)
+        // console.log(Date.now().toISOString())
+        records.forEach(function (record) {
+            console.log(record)
+
+            // re
+            // console.log(allRecords.includes(record))
+        });
+
+        // To fetch the next page of records, call `fetchNextPage`.
+        // If there are more records, `page` will get called again.
+        // If there are no more records, `done` will get called.
+        fetchNextPage();
+
+    }, function done(err) {
+
+    });
+}
+
+function tweetThursdayRandomEphemera() {
     base(table).select({
         view: "Grid",
         filterByFormula: "({hidden}= '')", // Only show items that are not hidden
@@ -66,15 +106,19 @@ function tweetRandomEphemera() {
 
         const recordString =
             `${recordName}. ${recordLocationAndCountry}. ${recordDateHuman}. Tagged with ${recordTagsFormatted}.`
+        const throwbackString =
+            `Throwback Thursday:\n\n${recordString}`
 
         const recordImageUrl = record.get("images")[0].url;
 
         prepareImage(recordImageUrl)
             .then((value) => {
                 // Trim off extraenous bits that Jimp adds to base64
-                const recordImage = value.substring(23, value.length);
+                const recordImage = value.substring(23, value.length)
                 // Prepare for tweeting
-                tweetIt(recordString, recordImage);
+                tweetIt(throwbackString, recordImage)
+                // End script
+                return
             })
     });
 }
@@ -146,22 +190,18 @@ function prepareImage(imageUrl) {
 
 // Run instantly
 // Turn on only for debugging as Heroku seems to like pinging this
-// tweetRandomEphemera();
+// tweetThursdayRandomEphemera()
+tweetLatestEphemera()
+
+// Throwback Thursday
+// Tweet every Thursday morning at 8am GMT (6pm AEST, 7pm AEDT, 3am EST, midnight PST)
+schedule.scheduleJob("0 8 * * THU", function () {
+    tweetThursdayRandomEphemera()
+})
 
 // TODO: Check Airtable for new record, 8am daily. Then tweet any new records
-// schedule.scheduleJob("0 8 * * *", function () {
-//     checkAndTweetNewEphemera();
-// });
-
-// TODO: fork Airtable function to produce random tweet (keep old random tweet generator)
-// Throwback Thursday
-// Tweet every Thursday morning at 8am
-// schedule.scheduleJob("0 8 * * THU", function () {
-//     tweetRandomEphemera();
-// })
-// Until then...
-// Run every day at 8am
+// Run every day at 8am GMT (6pm AEST, 7pm AEDT, 3am EST, midnight PST)
 // Syntax: http://www.cronmaker.com/
 schedule.scheduleJob("0 8 * * *", function () {
-    tweetRandomEphemera();
+    tweetLatestEphemera()
 });
