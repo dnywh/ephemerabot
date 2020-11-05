@@ -26,16 +26,19 @@ const base = require("airtable").base(process.env.AIRTABLE_BASE_ID);
 const table = "Main";
 
 
-// Function for tweeting a random Throwback Thursday ephemera item
+// Functions
+
+// Function for tweeting any new ephemera
 function tweetLatestEphemera() {
-    // Store this in a file
+    console.log("🎬 Checking Airtable for new ephemera")
+    // Prepare arrays
     const previouslyTweetedEphemera = []
     const notYetTweetedEphemera = []
 
     base(table).select({
         view: "Grid",
         filterByFormula: "({hidden}= '')", // Only show items that are not hidden
-        sort: [{ field: "date", direction: "desc" }], // Overrides what's set in the above view, just in case I forget
+        sort: [{ field: "date", direction: "desc" }], // Search by newest to oldest to ensure newest items are picked up (reversed later)
     }).eachPage(function page(records, fetchNextPage) {
         // This function (`page`) will get called for each page of records.
         records.forEach(function (record) {
@@ -50,7 +53,7 @@ function tweetLatestEphemera() {
                     // console.log("Already a match. Must have been tweeted already")
                 } else {
                     // If it doesn't exist, line it up to tweet
-                    console.log(`New ephemera to tweet: ${record.fields.name}`)
+                    console.log(`✨ New ephemera to tweet: ${record.fields.name}`)
                     notYetTweetedEphemera.push(record)
                     return
                 }
@@ -68,71 +71,53 @@ function tweetLatestEphemera() {
 
     }, function done(err) {
         if (err) { console.error(err); return; }
+        console.log("✅ Finished checking Airtable")
 
+        // If there are new items...
+        if (notYetTweetedEphemera.length) {
+            // Reverse array so oldest items get tweeted first
+            oldestToNewest = notYetTweetedEphemera.reverse()
 
-        console.log("Done sweeping pages...")
-        // console.log(notYetTweetedEphemera)
+            // Go through each item
+            // With a 20 second gap between each
+            // And tweet it out
+            for (let i = 0; i < oldestToNewest.length; i++) {
+                (function (i) {
+                    setTimeout(function () {
+                        const record = oldestToNewest[i]
+                        // Kick off the tweet
+                        kickOffTweet(record)
+                    }, 20000 * i);
+                })(i);
+            }
 
-        // Tweet it
-
-        // Select a random record for tweeting
-        // const record = allRecords[Math.floor(Math.random() * allRecords.length)];
-
-        notYetTweetedEphemera.map(record => {
-            // console.log(record.fields.name)
-            // console.log(record.fields.date)
-            // Prepare record text
-            const recordText = prepareText(record, false)
-
-            // Prepare image
-            const recordImageUrl = record.get("images")[0].url;
-
-            prepareImage(recordImageUrl)
-                .then((value) => {
-                    // Trim off extraenous bits that Jimp adds to base64
-                    const recordImage = value.substring(23, value.length)
-                    // Prepare for tweeting
-                    tweetIt(recordText, recordImage)
-                    // End script
-                    return
-                })
-
-        })
-
-
-
-
-
-
-
-
-
-
-
-
-
-        // Add this tweeted thing to the file so it doesn't get tweeted again
-        const previouslyTweetedEphemeraFormatted = JSON.stringify(previouslyTweetedEphemera, null, 4);
-        fs.writeFile(filePath, previouslyTweetedEphemeraFormatted, (err) => {
-            if (err) throw err;
-            // Write past ephemera items
-            console.log('The file has been saved!');
-        });
+            // Format and write all ephemera to file
+            // So they don't get tweeted in this function again
+            const previouslyTweetedEphemeraFormatted = JSON.stringify(previouslyTweetedEphemera, null, 4);
+            fs.writeFile(filePath, previouslyTweetedEphemeraFormatted, (err) => {
+                if (err) throw err;
+                // Confirm file save
+                console.log(`File '✅ ${filePath}' has been saved with the queued ephemera`);
+            });
+        } else {
+            console.log("✅ Now new items to tweet")
+        }
     });
 }
 
 // Function for tweeting a random Throwback Thursday ephemera item
 function tweetThursdayRandomEphemera() {
+    console.log("🎬 Scouring Airtable for a random piece of ephemera")
+
     // Prepare array for all records
     const allRecords = []
 
     base(table).select({
         view: "Grid",
         filterByFormula: "({hidden}= '')", // Only show items that are not hidden
-        sort: [{ field: "date", direction: "desc" }], // Overrides what's set in the above view, just in case I forget
+        sort: [{ field: "date", direction: "desc" }], // Sort by newest-first just for debugging (has no effect on random)
     }).eachPage(function page(records, fetchNextPage) {
         // This function (`page`) will get called for each page of records.
-
         records.forEach(function (record) {
             // Push each record to the array
             allRecords.push(record);
@@ -145,39 +130,28 @@ function tweetThursdayRandomEphemera() {
 
     }, function done(err) {
         if (err) { console.error(err); return; }
+        console.log("✅ Finished checking Airtable")
         // Select a random record for tweeting
         const record = allRecords[Math.floor(Math.random() * allRecords.length)];
-
-        // Prepare record text with throwback text true
-        const recordText = prepareText(record, true)
-
-        // Prepare image
-        const recordImageUrl = record.get("images")[0].url;
-
-        prepareImage(recordImageUrl)
-            .then((value) => {
-                // Trim off extraenous bits that Jimp adds to base64
-                const recordImage = value.substring(23, value.length)
-                // Prepare for tweeting
-                tweetIt(recordText, recordImage)
-                // End script
-                return
-            })
+        // Kick off the tweet
+        kickOffTweet(record)
     });
 }
 
+function kickOffTweet(record) {
+    console.log("⏳ Now beginning to tweet...")
+    // Prepare record text with throwback text true
+    const recordText = prepareText(record, true)
 
-
-
-
-
-
-
-
-
-
-
-
+    // Prepare image
+    prepareImage(record)
+        .then((value) => {
+            // Trim off extraenous bits that Jimp adds to base64
+            const recordImage = value.substring(23, value.length)
+            // Tweet it
+            tweetIt(recordText, recordImage)
+        })
+}
 
 // Function for seding out tweet
 function tweetIt(tweetText, tweetImage) {
@@ -205,14 +179,13 @@ function tweetIt(tweetText, tweetImage) {
         if (err !== undefined) {
             console.log(err)
         } else {
-            console.log('Tweeted: ' + reply.text)
+            console.log('🐦 Tweeted: ' + reply.text)
         }
     }
 }
 
 // Function for preparing tweet text
 function prepareText(record, isThrowback) {
-
     const recordName = record.get("name");
     const recordDate = record.get("date");
     // Format date so it can be programatically changed a few lines below
@@ -245,7 +218,9 @@ function prepareText(record, isThrowback) {
 }
 
 // Function for preparing tweet image
-function prepareImage(imageUrl) {
+function prepareImage(record) {
+    const imageUrl = record.get("images")[0].url
+
     return new Promise((resolve, reject) => {
         // Create the white frame
         // Set to 2048x1024 to match Twitter's preferred 1024x512 ratio
@@ -256,8 +231,8 @@ function prepareImage(imageUrl) {
             Jimp.read(imageUrl, (err, image) => {
                 if (err) throw err;
 
-                // Resize image to have a maxium dimension of 60%
-                image.scaleToFit(2048, 1024 * 0.60);
+                // Scale image to have horizontal and vertical padding
+                image.scaleToFit(2048 * 0.8, 1024 * 0.65);
 
                 // Calculate coordinates to center image
                 const x = Math.floor((frame.bitmap.width - image.bitmap.width) / 2);
@@ -268,7 +243,7 @@ function prepareImage(imageUrl) {
 
                     // Write the final image to file for debugging
                     .write("tweet-img.jpg")
-                    // Convert recordImageUrl to base64 for tweeting
+                    // Convert image file to base64 for tweeting
                     .getBase64(Jimp.MIME_JPEG, (err, base64ImageString) => {
                         // Resolve it
                         resolve(base64ImageString)
@@ -279,22 +254,23 @@ function prepareImage(imageUrl) {
     })
 }
 
+
 // Call main functions
 
-// Run instantly
-// Turn on only for debugging as Heroku seems to like pinging this
+// Instant functions for debugging only
 // tweetThursdayRandomEphemera()
-tweetLatestEphemera()
+// tweetLatestEphemera()
 
-// // Throwback Thursday
-// // Tweet every Thursday morning at 8am GMT (6pm AEST, 7pm AEDT, 3am EST, midnight PST)
-// schedule.scheduleJob("0 8 * * THU", function () {
-//     tweetThursdayRandomEphemera()
-// })
+// Throwback Thursday
+// Tweet every Thursday morning at 8am GMT (6pm AEST, 7pm AEDT, 3am EST, midnight PST)
+schedule.scheduleJob("0 8 * * THU", function () {
+    tweetThursdayRandomEphemera()
+})
 
-// // TODO: Check Airtable for new record, 8am daily. Then tweet any new records
-// // Run every day at 8am GMT (6pm AEST, 7pm AEDT, 3am EST, midnight PST)
-// // Syntax: http://www.cronmaker.com/
-// schedule.scheduleJob("0 8 * * *", function () {
-//     tweetLatestEphemera()
-// });
+// Latest ephemera
+// Checks for and tweets new Airtable records
+// Run daily at 8am GMT (6pm AEST, 7pm AEDT, 3am EST, midnight PST)
+// Syntax: http://www.cronmaker.com/
+schedule.scheduleJob("0 8 * * *", function () {
+    tweetLatestEphemera()
+});
