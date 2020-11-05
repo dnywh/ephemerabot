@@ -186,7 +186,7 @@ function tweetIt(tweetText, tweetImage) {
 function prepareText(record, isThrowback) {
     const recordName = record.get("name");
     const recordDate = record.get("date");
-    // Format date so it can be programatically changed a few lines below
+    // Format date so it can be programmatically changed a few lines below
     // Pass through the year, month, and day
     const recordDateStructured = new Date(recordDate.substring(0, 4), (recordDate.substring(5, 7) - 1), recordDate.substring(8, 10));
     // Use this to create a readable date format
@@ -260,18 +260,18 @@ function prepareImage(record) {
 // tweetLatestEphemera()
 
 // Throwback Thursday
-// Tweet every Thursday morning at 8AM GMT (6pm AEST, 7PM AEDT, 3AM EST, midnight PST)
+// Tweet every Thursday morning at 8AM GMT (6pm AEST, 7PM AEDT, 3AM EST, 12AM PST)
 schedule.scheduleJob("0 8 * * THU", function () {
     tweetThursdayRandomEphemera()
 })
 
 // Latest ephemera
 // Checks for and tweets new Airtable records twice a day
-// Run daily at 8AM GMT (6PM AEST, 7PM AEDT, 3AM EST, midnight PST)
+// Run daily at 8AM GMT (6PM AEST, 7PM AEDT, 3AM EST, 12AM PST)
 schedule.scheduleJob("0 8 * * *", function () {
     tweetLatestEphemera()
 });
-// Run daily at 8PM GMT (6AM AEST, 7AM AEDT, 3PM EST, midnight PST)
+// Run daily at 8PM GMT (6AM AEST, 7AM AEDT, 3PM EST, 12PM PST)
 schedule.scheduleJob("0 20 * * *", function () {
     tweetLatestEphemera()
 });
