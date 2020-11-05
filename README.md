@@ -2,7 +2,7 @@
 
 # Ephemerabot
 
-[Ephemerabot](https://twitter.com/ephemerabot) is the Twitter bot cousin of the [Ephemera](https://github.com/dnywh/ephemera) project. Ephemerabot checks for and [tweets out](https://twitter.com/ephemerabot) new scraps of ephemera daily, and tweets out a Throwback Thursday edition every...Thursday.
+[Ephemerabot](https://twitter.com/ephemerabot) is a Twitter bot cousin of the [Ephemera](https://github.com/dnywh/ephemera) project. Ephemerabot checks for and [tweets out](https://twitter.com/ephemerabot) new scraps of ephemera daily, and tweets out a Throwback Thursday edition every...Thursday.
 
 This repo might be useful to you if:
 
