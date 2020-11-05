@@ -155,8 +155,6 @@ function kickOffTweet(record) {
 
 // Function for seding out tweet
 function tweetIt(tweetText, tweetImage) {
-    // TODO: Run Airtable from within here?
-
     // Upload image
     T.post('media/upload', { media_data: tweetImage }, uploaded);
 
