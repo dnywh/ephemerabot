@@ -260,15 +260,18 @@ function prepareImage(record) {
 // tweetLatestEphemera()
 
 // Throwback Thursday
-// Tweet every Thursday morning at 8am GMT (6pm AEST, 7pm AEDT, 3am EST, midnight PST)
+// Tweet every Thursday morning at 8AM GMT (6pm AEST, 7PM AEDT, 3AM EST, midnight PST)
 schedule.scheduleJob("0 8 * * THU", function () {
     tweetThursdayRandomEphemera()
 })
 
 // Latest ephemera
-// Checks for and tweets new Airtable records
-// Run daily at 8am GMT (6pm AEST, 7pm AEDT, 3am EST, midnight PST)
-// Syntax: http://www.cronmaker.com/
+// Checks for and tweets new Airtable records twice a day
+// Run daily at 8AM GMT (6PM AEST, 7PM AEDT, 3AM EST, midnight PST)
 schedule.scheduleJob("0 8 * * *", function () {
+    tweetLatestEphemera()
+});
+// Run daily at 8PM GMT (6AM AEST, 7AM AEDT, 3PM EST, midnight PST)
+schedule.scheduleJob("0 20 * * *", function () {
     tweetLatestEphemera()
 });
