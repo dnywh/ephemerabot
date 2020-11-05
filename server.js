@@ -53,7 +53,7 @@ function tweetLatestEphemera() {
                     // console.log("Already a match. Must have been tweeted already")
                 } else {
                     // If it doesn't exist, line it up to tweet
-                    console.log(`✨ New ephemera to tweet: ${record.fields.name}`)
+                    console.log(`✨ New ephemera queued up for tweeting: ${record.fields.name}`)
                     notYetTweetedEphemera.push(record)
                     return
                 }
@@ -86,7 +86,7 @@ function tweetLatestEphemera() {
                     setTimeout(function () {
                         const record = oldestToNewest[i]
                         // Kick off the tweet
-                        kickOffTweet(record)
+                        kickOffTweet(record, false)
                     }, 20000 * i);
                 })(i);
             }
@@ -97,7 +97,7 @@ function tweetLatestEphemera() {
             fs.writeFile(filePath, previouslyTweetedEphemeraFormatted, (err) => {
                 if (err) throw err;
                 // Confirm file save
-                console.log(`File '✅ ${filePath}' has been saved with the queued ephemera`);
+                console.log(`✅ File '${filePath}' has been saved with the queued ephemera`);
             });
         } else {
             console.log("✅ Now new items to tweet")
@@ -134,14 +134,14 @@ function tweetThursdayRandomEphemera() {
         // Select a random record for tweeting
         const record = allRecords[Math.floor(Math.random() * allRecords.length)];
         // Kick off the tweet
-        kickOffTweet(record)
+        kickOffTweet(record, true)
     });
 }
 
-function kickOffTweet(record) {
+function kickOffTweet(record, isThrowback) {
     console.log("⏳ Now beginning to tweet...")
     // Prepare record text with throwback text true
-    const recordText = prepareText(record, true)
+    const recordText = prepareText(record, isThrowback)
 
     // Prepare image
     prepareImage(record)
@@ -163,9 +163,13 @@ function tweetIt(tweetText, tweetImage) {
         if (err) console.log(err);
         // Prepare tweet content
         const tweetContent = {
-            status: tweetText,
+            "status": tweetText,
             // Put Twitter's image ID into an array
-            media_ids: new Array(data.media_id_string)
+            "media_ids": new Array(data.media_id_string),
+            // TODO: get alt_text to work
+            // Mention @get_altText on tweets to debug
+            // "media_id": `${data.media_id_string}`,
+            // "alt_text": { "text": "A scanned piece of physical ephemera" }
         }
 
         // Tweet it!
@@ -257,7 +261,7 @@ function prepareImage(record) {
 
 // Instant functions for debugging only
 // tweetThursdayRandomEphemera()
-// tweetLatestEphemera()
+tweetLatestEphemera()
 
 // Throwback Thursday
 // Tweet every Thursday morning at 8AM GMT (6pm AEST, 7PM AEDT, 3AM EST, 12AM PST)
