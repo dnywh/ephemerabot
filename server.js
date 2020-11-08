@@ -261,7 +261,7 @@ function prepareImage(record) {
 
 // Instant functions for debugging only
 // tweetThursdayRandomEphemera()
-tweetLatestEphemera()
+// tweetLatestEphemera()
 
 // Throwback Thursday
 // Tweet every Thursday morning at 8AM GMT (6pm AEST, 7PM AEDT, 3AM EST, 12AM PST)
