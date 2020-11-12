@@ -71,11 +71,13 @@ Ephemerabot loves to chat. Keep an eye on the terminal to see how things are pro
 Ephemerabot compares _[previouslyTweetedEphemera.json](https://github.com/dnywh/ephemerabot/blob/master/previouslyTweetedEphemera.json)_ against Airtable's records to see which records haven't been tweeted out. They then tweet _all_ of these not-yet-tweeted records out. Consider filling _previouslyTweetedEphemera.json_ with most or all of Airtable's data before running. The easiest way to do this is to just comment-out the tweeting function, as the 'new' records will be added to the _previouslyTweetedEphemera.json_ regardless.
 
 1. Navigate to _[server.js](https://github.com/dnywh/ephemerabot/blob/master/server.js)_ and find the `tweetLatestEphemera()` function
-2. Find `kickOffTweet(record)` inside of this function
+2. Find `kickOffTweet(record, false)` inside of this function
 3. Comment it out
-4. Run `npm start` only
-5. Check that _previouslyTweetedEphemera.json_ has filled
-6. Uncomment `kickOffTweet(record)`
+4. Call `tweetLatestEphemera()` at the bottom of the script
+5. Run `npm start` only
+6. Check that _previouslyTweetedEphemera.json_ has filled
+7. Uncomment `kickOffTweet(record, false)`
+8. Remove your `tweetLatestEphemera()` from the bottom of the script
 
 Then remove a record or two from _previouslyTweetedEphemera.json_ before running `npm start` once more. That will leave you with only one or two records to tweet out (instead of hundreds).
 
