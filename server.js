@@ -28,7 +28,6 @@ function tweetLatestEphemera() {
     console.log("🎬 Checking Airtable for new ephemera")
     // Prepare arrays
     const notYetTweetedEphemera = []
-    const notYetTweetedEphemeraAgain = []
 
     base(table).select({
         view: "Grid",
@@ -39,14 +38,14 @@ function tweetLatestEphemera() {
         records.forEach(function (record) {
             if (!record.fields.tweeted) {
                 console.log(`✨ New ephemera queued up for tweeting: ${record.fields.name}`)
-                notYetTweetedEphemera.push(record)
 
                 // Prepare for updating Airtable
                 // Airtable's API wants these records formatted in a very particular way
-                const affectedRecords = {}
-                affectedRecords["id"] = record.id
-                affectedRecords["fields"] = record.fields
-                notYetTweetedEphemeraAgain.push(affectedRecords)
+                const recordObject = {}
+                recordObject["id"] = record.id
+                recordObject["fields"] = record.fields
+                // Push to array used for both tweeting and Airtable updating
+                notYetTweetedEphemera.push(recordObject)
             }
         });
         fetchNextPage();
@@ -72,13 +71,13 @@ function tweetLatestEphemera() {
                 })(i);
 
                 // Flick the 'tweeted' switch on to true now that tweet(s) sent
-                notYetTweetedEphemeraAgain.map(i => {
+                notYetTweetedEphemera.map(i => {
                     i.fields.tweeted = true
                 })
 
                 // Updating base records
                 // Be careful editing this!
-                base('Main').update(notYetTweetedEphemeraAgain, function (err, records) {
+                base('Main').update(notYetTweetedEphemera, function (err, records) {
                     if (err) throw err;
                 });
 
@@ -108,10 +107,6 @@ function tweetThursdayRandomEphemera() {
             // Push each record to the array
             allRecords.push(record);
         });
-
-        // To fetch the next page of records, call `fetchNextPage`.
-        // If there are more records, `page` will get called again.
-        // If there are no more records, `done` will get called.
         fetchNextPage();
 
     }, function done(err) {
@@ -174,18 +169,18 @@ function tweetIt(tweetText, tweetImage) {
 
 // Function for preparing tweet text
 function prepareText(record, isThrowback) {
-    const recordName = record.get("name");
-    const recordDate = record.get("date");
+    const recordName = record.fields.name;
+    const recordDate = record.fields.date;
     // Format date so it can be programmatically changed a few lines below
     // Pass through the year, month, and day
     const recordDateStructured = new Date(recordDate.substring(0, 4), (recordDate.substring(5, 7) - 1), recordDate.substring(8, 10));
     // Use this to create a readable date format
     const recordDateHuman = recordDateStructured.toLocaleString("default", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 
-    const recordLocation = record.get("location");
-    const recordCountry = record.get("country");
+    const recordLocation = record.fields.location;
+    const recordCountry = record.fields.country;
     const recordLocationAndCountry = `${recordLocation}, ${recordCountry}`
-    const recordTags = record.get("tags");
+    const recordTags = record.fields.tags;
     // Remove dashes/hyphens from each tag array item
     const recordTagsDashed = recordTags.map(i => i.replace(/-/g, ""));
     // Add a hashtag to the start of each tag array item
@@ -207,7 +202,7 @@ function prepareText(record, isThrowback) {
 
 // Function for preparing tweet image
 function prepareImage(record) {
-    const imageUrl = record.get("images")[0].url
+    const imageUrl = record.fields.images[0].url
 
     return new Promise((resolve, reject) => {
         // Create the white frame
@@ -247,7 +242,7 @@ function prepareImage(record) {
 
 // Instant functions for debugging only
 // tweetThursdayRandomEphemera()
-tweetLatestEphemera()
+// tweetLatestEphemera()
 
 // Throwback Thursday
 // Tweet every Thursday morning at 8AM GMT (6pm AEST, 7PM AEDT, 3AM EST, 12AM PST)
