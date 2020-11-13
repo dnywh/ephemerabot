@@ -1,11 +1,6 @@
 // Get env variables up and running
 require("dotenv").config();
 
-// Allow for reading and writing ephemera records
-const fs = require("fs");
-// Prepare file
-const filePath = "previouslyTweetedEphemera.json"
-
 // Allow for scheduling tweets
 const schedule = require("node-schedule");
 
@@ -32,8 +27,8 @@ const table = "Main";
 function tweetLatestEphemera() {
     console.log("🎬 Checking Airtable for new ephemera")
     // Prepare arrays
-    const previouslyTweetedEphemera = []
     const notYetTweetedEphemera = []
+    const notYetTweetedEphemeraAgain = []
 
     base(table).select({
         view: "Grid",
@@ -42,39 +37,25 @@ function tweetLatestEphemera() {
     }).eachPage(function page(records, fetchNextPage) {
         // This function (`page`) will get called for each page of records.
         records.forEach(function (record) {
-            // Check file if it already exists
-            fs.readFile(filePath, (err, data) => {
-                if (err) throw err;
-                // Prepare past ephemera items
-                const existingEphemera = JSON.parse(data)
-                // Compare this record against past ephemera items
-                if (existingEphemera.some(i => i.fields.name === record.fields.name)) {
-                    // If so, it has alreay been tweeted
-                    // console.log("Already a match. Must have been tweeted already")
-                } else {
-                    // If it doesn't exist, line it up to tweet
-                    console.log(`✨ New ephemera queued up for tweeting: ${record.fields.name}`)
-                    notYetTweetedEphemera.push(record)
-                    return
-                }
-            });
+            if (!record.fields.tweeted) {
+                console.log(`✨ New ephemera queued up for tweeting: ${record.fields.name}`)
+                notYetTweetedEphemera.push(record)
 
-
-            // Now that any missing ephemera has been lined up to tweet 
-            previouslyTweetedEphemera.push(record)
+                // Prepare for updating Airtable
+                // Airtable's API wants these records formatted in a very particular way
+                const affectedRecords = {}
+                affectedRecords["id"] = record.id
+                affectedRecords["fields"] = record.fields
+                notYetTweetedEphemeraAgain.push(affectedRecords)
+            }
         });
-
-        // To fetch the next page of records, call `fetchNextPage`.
-        // If there are more records, `page` will get called again.
-        // If there are no more records, `done` will get called.
         fetchNextPage();
 
     }, function done(err) {
-        if (err) { console.error(err); return; }
+        if (err) throw err;
         console.log("✅ Finished checking Airtable")
-
         // If there are new items...
-        if (notYetTweetedEphemera.length) {
+        if (notYetTweetedEphemera) {
             // Reverse array so oldest items get tweeted first
             oldestToNewest = notYetTweetedEphemera.reverse()
 
@@ -89,16 +70,21 @@ function tweetLatestEphemera() {
                         kickOffTweet(record, false)
                     }, 20000 * i);
                 })(i);
-            }
 
-            // Format and write all ephemera to file
-            // So they don't get tweeted in this function again
-            const previouslyTweetedEphemeraFormatted = JSON.stringify(previouslyTweetedEphemera, null, 4);
-            fs.writeFile(filePath, previouslyTweetedEphemeraFormatted, (err) => {
-                if (err) throw err;
-                // Confirm file save
-                console.log(`✅ File '${filePath}' has been saved with the queued ephemera`);
-            });
+                // Flick the 'tweeted' switch on to true now that tweet(s) sent
+                notYetTweetedEphemeraAgain.map(i => {
+                    i.fields.tweeted = true
+                })
+
+                // Updating base records
+                // Be careful editing this!
+                base('Main').update(notYetTweetedEphemeraAgain, function (err, records) {
+                    if (err) throw err;
+                });
+
+
+
+            }
         } else {
             console.log("✅ Now new items to tweet")
         }
@@ -129,7 +115,7 @@ function tweetThursdayRandomEphemera() {
         fetchNextPage();
 
     }, function done(err) {
-        if (err) { console.error(err); return; }
+        if (err) throw err;
         console.log("✅ Finished checking Airtable")
         // Select a random record for tweeting
         const record = allRecords[Math.floor(Math.random() * allRecords.length)];
@@ -160,7 +146,7 @@ function tweetIt(tweetText, tweetImage) {
 
     // Once image is uploaded on Twitter
     function uploaded(err, data, response) {
-        if (err) console.log(err);
+        if (err) throw err;
         // Prepare tweet content
         const tweetContent = {
             "status": tweetText,
@@ -261,7 +247,7 @@ function prepareImage(record) {
 
 // Instant functions for debugging only
 // tweetThursdayRandomEphemera()
-// tweetLatestEphemera()
+tweetLatestEphemera()
 
 // Throwback Thursday
 // Tweet every Thursday morning at 8AM GMT (6pm AEST, 7PM AEDT, 3AM EST, 12AM PST)
