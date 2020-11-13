@@ -36,6 +36,7 @@ function tweetLatestEphemera() {
     }).eachPage(function page(records, fetchNextPage) {
         // This function (`page`) will get called for each page of records.
         records.forEach(function (record) {
+            // If this record does not have its 'tweeted' checkbox checked...
             if (!record.fields.tweeted) {
                 console.log(`✨ New ephemera queued up for tweeting: ${record.fields.name}`)
 
@@ -44,7 +45,7 @@ function tweetLatestEphemera() {
                 const recordObject = {}
                 recordObject["id"] = record.id
                 recordObject["fields"] = record.fields
-                // Push to array used for both tweeting and Airtable updating
+                // Push to array used for both tweeting and later updating so it isn't tweeted again
                 notYetTweetedEphemera.push(recordObject)
             }
         });
