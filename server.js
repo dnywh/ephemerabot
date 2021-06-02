@@ -66,9 +66,8 @@ function tweetLatestEphemera(itemLimit = 6) {
             // Trim array to limit
             trimmedListTwoTweet = oldestToNewest.slice(0, itemLimit);
 
-            // Go through each item based on the 
-            // With a 20 second gap between each
-            // And tweet it out
+            // Go through the list of items (with a gap of 20 seconds),
+            // ...kicking off a tweet for each
             for (let i = 0; i < trimmedListTwoTweet.length; i++) {
                 (function (i) {
                     setTimeout(function () {
@@ -79,13 +78,13 @@ function tweetLatestEphemera(itemLimit = 6) {
                     }, 20000 * i);
                 })(i);
 
-                // Flick the 'tweeted' switch on to true now that tweet(s) sent
+                // Flick the 'tweeted' switch on to true now that tweet(s) have been kicked off
+                // Note that this assumes kickOffTweet() will succeed
                 trimmedListTwoTweet.map(i => {
                     i.fields.tweeted = true
                 })
 
-                // Updating base records
-                // Be careful editing this!
+                // Update Airtable base records accordingly
                 base('Main').update(trimmedListTwoTweet, function (err, records) {
                     if (err) throw err;
                 });
