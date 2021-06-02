@@ -73,12 +73,10 @@ Ephemerabot looks at the _tweeted_ value of each record to see if it has been tw
 To use the `tweetLatestEphemera()` function in debug mode:
 
 1. Make sure your connected Airtable base has at least one record with its _tweeted_ value set to `false`
-1. Navigate to _[server.js](https://github.com/dnywh/ephemerabot/blob/master/server.js)_ and find the `tweetLatestEphemera()` function
-1. Call `tweetLatestEphemera()` at the bottom of the script
-1. Run `npm start` only
-1. Keep an eye on your console for which tweets are queued for tweeting
-
-Comment-out `kickOffTweet(record, false)` if you just want to test in your terminal.
+2. Uncomment `tweetLatestEphemera()` in the _debugging_ section (at the bottom) of _[server.js](https://github.com/dnywh/ephemerabot/blob/master/server.js)_
+3. Uncomment `kickOffTweet(record, false)` (within the main `tweetLatestEphemera() function`) if you just want to debug locally
+4. Run `npm start`
+5. Keep an eye on your console for the results
 
 ### Running externally
 
