@@ -24,9 +24,11 @@ const table = "Main";
 // Functions
 
 // Function for tweeting any new ephemera
-function tweetLatestEphemera() {
+// Has parameter to control how many bits of ephemera at a time,
+// with the default value set 6
+function tweetLatestEphemera(itemLimit = 6) {
     console.log("🎬 Checking Airtable for new ephemera")
-    // Prepare arrays
+    // Prepare array
     const notYetTweetedEphemera = []
 
     base(table).select({
@@ -38,7 +40,7 @@ function tweetLatestEphemera() {
         records.forEach(function (record) {
             // If this record does not have its 'tweeted' checkbox checked...
             if (!record.fields.tweeted) {
-                console.log(`✨ New ephemera queued up for tweeting: ${record.fields.name}`)
+                console.log(`✨ New ephemera available for tweeting: ${record.fields.name}`)
 
                 // Prepare for updating Airtable
                 // Airtable's API wants these records formatted in a very particular way
@@ -53,32 +55,38 @@ function tweetLatestEphemera() {
 
     }, function done(err) {
         if (err) throw err;
-        console.log("✅ Finished checking Airtable")
+        console.log("🔵 Finished checking Airtable")
         // If there are new items...
         if (notYetTweetedEphemera) {
             // Reverse array so oldest items get tweeted first
             oldestToNewest = notYetTweetedEphemera.reverse()
+            if (itemLimit !== notYetTweetedEphemera.length) {
+                console.log(`🔪 Only tweeting out the oldest ${itemLimit} item(s) as per your request`)
+            }
+            // Trim array to limit
+            trimmedListTwoTweet = oldestToNewest.slice(0, itemLimit);
 
-            // Go through each item
+            // Go through each item based on the 
             // With a 20 second gap between each
             // And tweet it out
-            for (let i = 0; i < oldestToNewest.length; i++) {
+            for (let i = 0; i < trimmedListTwoTweet.length; i++) {
                 (function (i) {
                     setTimeout(function () {
-                        const record = oldestToNewest[i]
+                        const recordObject = trimmedListTwoTweet[i]
                         // Kick off the tweet
-                        kickOffTweet(record, false)
+                        kickOffTweet(recordObject, false)
+                        console.log("🔵 Just kicked off tweet for:", recordObject.fields.name)
                     }, 20000 * i);
                 })(i);
 
                 // Flick the 'tweeted' switch on to true now that tweet(s) sent
-                notYetTweetedEphemera.map(i => {
+                trimmedListTwoTweet.map(i => {
                     i.fields.tweeted = true
                 })
 
                 // Updating base records
                 // Be careful editing this!
-                base('Main').update(notYetTweetedEphemera, function (err, records) {
+                base('Main').update(trimmedListTwoTweet, function (err, records) {
                     if (err) throw err;
                 });
 
@@ -163,7 +171,7 @@ function tweetIt(tweetText, tweetImage) {
         if (err !== undefined) {
             console.log(err)
         } else {
-            console.log('🐦 Tweeted: ' + reply.text)
+            console.log('🐦 Just tweeted: ' + reply.text)
         }
     }
 }
@@ -243,7 +251,7 @@ function prepareImage(record) {
 
 // Instant functions for debugging only
 // tweetThursdayRandomEphemera()
-// tweetLatestEphemera()
+// tweetLatestEphemera(1)
 
 // Throwback Thursday
 // Tweet every Thursday morning at 8AM GMT (6pm AEST, 7PM AEDT, 3AM EST, 12AM PST)
@@ -254,10 +262,12 @@ schedule.scheduleJob("0 8 * * THU", function () {
 // Latest ephemera
 // Checks for and tweets new Airtable records twice a day
 // Run daily at 8AM GMT (6PM AEST, 7PM AEDT, 3AM EST, 12AM PST)
+// Post a maximum of one ephemera item
 schedule.scheduleJob("0 8 * * *", function () {
-    tweetLatestEphemera()
+    tweetLatestEphemera(1)
 });
-// Run daily at 8PM GMT (6AM AEST, 7AM AEDT, 3PM EST, 12PM PST)
+// // Run daily at 8PM GMT (6AM AEST, 7AM AEDT, 3PM EST, 12PM PST)
+// Post a maximum of one ephemera item
 schedule.scheduleJob("0 20 * * *", function () {
-    tweetLatestEphemera()
+    tweetLatestEphemera(1)
 });
