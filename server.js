@@ -135,14 +135,14 @@ function kickOffTweet(record, isThrowback) {
     // Prepare image
     prepareImage(record)
         .then((value) => {
-            // Trim off extraenous bits that Jimp adds to base64
+            // Trim off extraneous bits that Jimp adds to base64
             const recordImage = value.substring(23, value.length)
             // Tweet it
             tweetIt(recordText, recordImage)
         })
 }
 
-// Function for seding out tweet
+// Function for sending out tweet
 function tweetIt(tweetText, tweetImage) {
     // Upload image
     T.post('media/upload', { media_data: tweetImage }, uploaded);
@@ -229,7 +229,7 @@ function prepareImage(record) {
                 const x = Math.floor((frame.bitmap.width - image.bitmap.width) / 2);
                 const y = Math.floor((frame.bitmap.height - image.bitmap.height) / 2);
 
-                // Compostite image onto the frame
+                // Composite image onto the frame
                 frame.composite(image, x, y)
 
                     // Write the final image to file for debugging
@@ -254,9 +254,9 @@ function prepareImage(record) {
 
 // Throwback Thursday
 // Tweet every Thursday morning at 8AM GMT (6pm AEST, 7PM AEDT, 3AM EST, 12AM PST)
-schedule.scheduleJob("0 8 * * THU", function () {
-    tweetThursdayRandomEphemera()
-})
+// schedule.scheduleJob("0 8 * * THU", function () {
+//     tweetThursdayRandomEphemera()
+// })
 
 // Latest ephemera
 // Checks for and tweets new Airtable records twice a day
@@ -265,7 +265,7 @@ schedule.scheduleJob("0 8 * * THU", function () {
 schedule.scheduleJob("0 8 * * *", function () {
     tweetLatestEphemera(1)
 });
-// // Run daily at 8PM GMT (6AM AEST, 7AM AEDT, 3PM EST, 12PM PST)
+// Run daily at 8PM GMT (6AM AEST, 7AM AEDT, 3PM EST, 12PM PST)
 // Post a maximum of one ephemera item
 schedule.scheduleJob("0 20 * * *", function () {
     tweetLatestEphemera(1)
