@@ -36,7 +36,7 @@ cd ephemerabot
 npm install
 ```
 
-3. Create a file called .env and enter values for the variables shown in [.env.example](https://github.com/dnywh/ephemerabot/blob/master/.env.example)
+3. Create a file called .env and enter values for the variables shown in [.env.example](https://github.com/dnywh/ephemerabot/blob/main/.env.example)
 
 ```
 TWITTER_API_KEY=
@@ -62,7 +62,7 @@ Here's how to get Ephemerabot going, assuming you have followed the above instru
 npm start
 ```
 
-Consider using one of the [two core functions](https://github.com/dnywh/ephemerabot/blob/master/server.js#L258) currently commented-out for debugging. Otherwise Ephemerabot will just wait for its scheduled time to post.
+Consider using one of the [two core functions](https://github.com/dnywh/ephemerabot/blob/main/server.js#L258) currently commented-out for debugging. Otherwise Ephemerabot will just wait for its scheduled time to post.
 
 Ephemerabot loves to chat. Keep an eye on the terminal to see how things are progressing.
 
@@ -73,14 +73,14 @@ Ephemerabot looks at the _tweeted_ value of each record to see if it has been tw
 To use the `tweetLatestEphemera()` function in debug mode:
 
 1. Make sure your connected Airtable base has at least one record with its _tweeted_ value set to `false`
-2. Uncomment `tweetLatestEphemera()` in the _debugging_ section (at the bottom) of _[server.js](https://github.com/dnywh/ephemerabot/blob/master/server.js)_
-3. Uncomment `kickOffTweet(record, false)` (within the main `tweetLatestEphemera() function`) if you just want to debug locally
+2. Uncomment `tweetLatestEphemera()` in the _debugging_ section (at the bottom) of _[server.js](https://github.com/dnywh/ephemerabot/blob/main/server.js)_
+3. If you just want to debug locally (and not kick off a real tweet): Comment-out `kickOffTweet(record, false)` within the main `tweetLatestEphemera() function`
 4. Run `npm start`
 5. Keep an eye on your console for the results
 
 ### Running externally
 
-Running Node on your computer is the only way Ephemerabot lives, unless you 'deploy' this app to a server. You'll need to sign up to a service such as Heroku to do so. Daniel Shiffman has [a](https://www.youtube.com/watch?v=Rz886HkV1j4) [few](https://www.youtube.com/watch?v=DwWPunpypNA) videos on this that I think are beginner-friendly.
+Running Node on your computer is the only way Ephemerabot lives, unless you deploy this app to a server. You'll need to sign up to a service such as Heroku to do so. Daniel Shiffman has [a](https://www.youtube.com/watch?v=Rz886HkV1j4) [few](https://www.youtube.com/watch?v=DwWPunpypNA) videos on this that are beginner-friendly.
 
 Once you have set up a Heroku account and installed the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli):
 
@@ -90,3 +90,7 @@ Once you have set up a Heroku account and installed the [Heroku CLI](https://dev
 ```sh
 git push heroku main
 ```
+
+#### Image hosting
+
+To use your own images you'll need to use a service like Cloudinary and change the `imageDirectory` value in _[server.js](https://github.com/dnywh/ephemerabot/blob/main/server.js)_.
