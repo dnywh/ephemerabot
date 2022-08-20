@@ -264,9 +264,9 @@ function prepareImage(record) {
 // Checks for and tweets new Airtable records twice a day
 // Run daily at 8AM GMT (6PM AEST, 7PM AEDT, 3AM EST, 12AM PST)
 // Post a maximum of one ephemera item
-schedule.scheduleJob("0 8 * * *", function () {
-    tweetLatestEphemera(1)
-});
+// schedule.scheduleJob("0 8 * * *", function () {
+//     tweetLatestEphemera(1)
+// });
 // Run daily at 8PM GMT (6AM AEST, 7AM AEDT, 3PM EST, 12PM PST)
 // Post a maximum of one ephemera item
 schedule.scheduleJob("0 20 * * *", function () {
