@@ -123,13 +123,13 @@ function tweetThursdayRandomEphemera() {
         // Select a random record for tweeting
         const record = allRecords[Math.floor(Math.random() * allRecords.length)];
         // Kick off the tweet
-        // kickOffTweet(record, true)
+        kickOffTweet(record, true)
     });
 }
 
 function kickOffTweet(record, isThrowback) {
     // Deploy to Netlify via build hook
-    console.log("🌐 Now initiating Netlify deploy of https://ephemera.fyi for:", record.fields.name)
+    console.log("🌐 Now starting Netlify deploy of https://ephemera.fyi for:", record.fields.name)
     fetch(rebuild_url, { method: 'POST' })
 
     // Then prepare tweet
@@ -222,6 +222,7 @@ function prepareImage(record) {
     const imageDirectory = "https://res.cloudinary.com/ephemera/image/upload/q_auto,f_auto,w_2048/"
     const imageSlug = record.fields.imageSlug
     const imageUrl = imageDirectory + imageSlug
+    console.log("🎟 Loading image from URL: ", imageUrl)
 
     return new Promise((resolve, reject) => {
         // Create the white frame
@@ -260,8 +261,8 @@ function prepareImage(record) {
 // Call main functions
 
 // Instant functions for debugging only
+// tweetLatestEphemera(1)
 // tweetThursdayRandomEphemera()
-tweetLatestEphemera(1)
 
 // Throwback Thursday
 // Tweet every Thursday morning at 8AM GMT (6pm AEST, 7PM AEDT, 3AM EST, 12AM PST)
