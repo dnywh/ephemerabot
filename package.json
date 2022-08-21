@@ -1,13 +1,12 @@
 {
   "name": "ephemerabot",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "engines": {
     "node": "18.x"
   },
   "description": "A Twitter bot for Ephemera.",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node -r dotenv/config server.js"
   },
   "keywords": [

@@ -3,6 +3,8 @@ require("dotenv").config();
 
 // Allow for scheduling tweets
 const schedule = require("node-schedule");
+// Prepare for automatic Netlify builds at the same time as tweeting
+const rebuild_url = process.env.NETLIFY_REBUILD_URL
 
 // Allow for image editing
 const Jimp = require("jimp");
@@ -57,12 +59,10 @@ function tweetLatestEphemera(itemLimit = 6) {
         if (err) throw err;
         console.log("🔵 Finished checking Airtable")
         // If there are new items...
-        if (notYetTweetedEphemera) {
+        if (notYetTweetedEphemera.length) {
             // Reverse array so oldest items get tweeted first
             oldestToNewest = notYetTweetedEphemera.reverse()
-            if (itemLimit !== notYetTweetedEphemera.length) {
-                console.log(`🔪 Only tweeting out the oldest ${itemLimit} item(s) as per your request`)
-            }
+            console.log(`🔪 Only tweeting out the oldest ${itemLimit} item(s) as per your request`)
             // Trim array to limit
             trimmedListTwoTweet = oldestToNewest.slice(0, itemLimit);
 
@@ -74,7 +74,7 @@ function tweetLatestEphemera(itemLimit = 6) {
                         const recordObject = trimmedListTwoTweet[i]
                         // Kick off the tweet
                         kickOffTweet(recordObject, false)
-                        console.log("🔵 Just kicked off tweet for:", recordObject.fields.name)
+                        console.log("🐦 Now initiating tweet for:", recordObject.fields.name)
                     }, 20000 * i);
                 })(i);
 
@@ -88,12 +88,12 @@ function tweetLatestEphemera(itemLimit = 6) {
                 base('Main').update(trimmedListTwoTweet, function (err, records) {
                     if (err) throw err;
                 });
-
-
-
             }
         } else {
             console.log("✅ Now new items to tweet")
+            // Exit from Node with success code
+            // https://nodejs.dev/en/learn/how-to-exit-from-a-nodejs-program
+            process.exit(0)
         }
     });
 }
@@ -123,12 +123,16 @@ function tweetThursdayRandomEphemera() {
         // Select a random record for tweeting
         const record = allRecords[Math.floor(Math.random() * allRecords.length)];
         // Kick off the tweet
-        kickOffTweet(record, true)
+        // kickOffTweet(record, true)
     });
 }
 
 function kickOffTweet(record, isThrowback) {
-    console.log("⏳ Now beginning to tweet...")
+    // Deploy to Netlify via build hook
+    console.log("🌐 Now initiating Netlify deploy of https://ephemera.fyi for:", record.fields.name)
+    fetch(rebuild_url, { method: 'POST' })
+
+    // Then prepare tweet
     // Prepare record text with throwback text true
     const recordText = prepareText(record, isThrowback)
 
@@ -169,8 +173,13 @@ function tweetIt(tweetText, tweetImage) {
     function onTweeted(err, reply) {
         if (err !== undefined) {
             console.log(err)
+            // Exit from Node with error
+            process.exit(1);
         } else {
-            console.log('🐦 Just tweeted: ' + reply.text)
+            console.log('🟢 Successfully tweeted: ' + reply.text)
+            // Exit from Node with success code
+            // https://nodejs.dev/en/learn/how-to-exit-from-a-nodejs-program
+            process.exit(0);
         }
     }
 }
@@ -252,7 +261,7 @@ function prepareImage(record) {
 
 // Instant functions for debugging only
 // tweetThursdayRandomEphemera()
-// tweetLatestEphemera(1)
+tweetLatestEphemera(1)
 
 // Throwback Thursday
 // Tweet every Thursday morning at 8AM GMT (6pm AEST, 7PM AEDT, 3AM EST, 12AM PST)

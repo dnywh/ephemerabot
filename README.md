@@ -2,7 +2,7 @@
 
 # Ephemerabot
 
-[Ephemerabot](https://twitter.com/ephemerabot) is a Twitter bot cousin of the [Ephemera](https://github.com/dnywh/ephemera) project. Ephemerabot checks for and [tweets out](https://twitter.com/ephemerabot) new scraps of ephemera daily, and tweets out a Throwback Thursday edition every...Thursday.
+[Ephemerabot](https://twitter.com/ephemerabot) is a Twitter bot cousin of the [Ephemera](https://github.com/dnywh/ephemera) project. Ephemerabot checks for and [tweets out](https://twitter.com/ephemerabot) new scraps of ephemera daily. Any new ephemera also causes the [Ephemera website](https://ephemera.fyi) to rebuild using Netlify build hooks.
 
 This repo might be useful to you if:
 
@@ -10,6 +10,7 @@ This repo might be useful to you if:
 - Your ideal Twitter bot reads and writes images
 - You'd like to transform images via Node
 - You're interested in using the Airtable API
+- You're interested in automatically deploying Netlify sites
 
 ## Getting started
 
@@ -17,9 +18,14 @@ Here's how to get this project working locally.
 
 ### Prerequisites
 
-- Node.js and npm
+- Node.js (v18 and above) and npm
 - An Airtable base and API key ([instructions here](https://github.com/dnywh/ephemera#1-get-your-airtable-in-order))
 - A Twitter developer account and API key
+
+And if you'd like to make Ephemerabot automatically deploy you'll need to either:
+
+- Prepare a Netlify site with a [build hook](https://docs.netlify.com/configure-builds/build-hooks/) URL
+- Comment-out the `fetch(rebuild_url, { method: 'POST' })` line in _[server.js](https://github.com/dnywh/ephemerabot/blob/main/server.js)_
 
 ### Installation
 
@@ -47,6 +53,8 @@ TWITTER_ACCESS_SECRET=
 
 AIRTABLE_API_KEY=
 AIRTABLE_BASE_ID=
+
+REBUILD_URL=
 ```
 
 ## Usage
