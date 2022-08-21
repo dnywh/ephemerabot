@@ -219,7 +219,7 @@ function prepareText(record, isThrowback) {
 
 // Function for preparing tweet image
 function prepareImage(record) {
-    const imageDirectory = "https://res.cloudinary.com/dannywhite/image/upload/q_auto,f_auto,w_2048/ephemera/"
+    const imageDirectory = "https://res.cloudinary.com/ephemera/image/upload/q_auto,f_auto,w_2048/"
     const imageSlug = record.fields.imageSlug
     const imageUrl = imageDirectory + imageSlug
 
