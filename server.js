@@ -93,7 +93,7 @@ function tweetLatestEphemera(itemLimit = 6) {
             console.log("✅ Now new items to tweet")
             // Exit from Node with success code
             // https://nodejs.dev/en/learn/how-to-exit-from-a-nodejs-program
-            process.exit(0)
+            // process.exit(0)
         }
     });
 }
@@ -174,12 +174,12 @@ function tweetIt(tweetText, tweetImage) {
         if (err !== undefined) {
             console.log(err)
             // Exit from Node with error
-            process.exit(1);
+            // process.exit(1);
         } else {
             console.log('🟢 Successfully tweeted: ' + reply.text)
             // Exit from Node with success code
             // https://nodejs.dev/en/learn/how-to-exit-from-a-nodejs-program
-            process.exit(0);
+            // process.exit(0);
         }
     }
 }
