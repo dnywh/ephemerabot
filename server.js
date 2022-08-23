@@ -259,7 +259,7 @@ function prepareImage(record) {
 
 
 // Call main functions
-
+console.log("Starting...")
 // Instant functions for debugging only
 // tweetLatestEphemera(1)
 // tweetThursdayRandomEphemera()
@@ -277,8 +277,16 @@ function prepareImage(record) {
 // schedule.scheduleJob("0 8 * * *", function () {
 //     tweetLatestEphemera(1)
 // });
+
+// Temporary:
+// Run daily at 1:30AM GMT
+// Post a maximum of one ephemera item
+schedule.scheduleJob("30 1 * * *", function () {
+    tweetLatestEphemera(1)
+});
 // Run daily at 8PM GMT (6AM AEST, 7AM AEDT, 3PM EST, 12PM PST)
 // Post a maximum of one ephemera item
 schedule.scheduleJob("0 20 * * *", function () {
+    console.log("Kicking off process...")
     tweetLatestEphemera(1)
 });
