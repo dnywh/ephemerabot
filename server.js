@@ -277,7 +277,7 @@ function prepareImage(record) {
 // Call main functions
 console.log("Starting...")
 // Instant functions for debugging only
-tweetLatestEphemera(1)
+// tweetLatestEphemera(1)
 // tweetThursdayRandomEphemera()
 
 // Throwback Thursday
@@ -287,20 +287,8 @@ tweetLatestEphemera(1)
 // })
 
 // Latest ephemera
-// Checks for and tweets new Airtable records twice a day
-// Run daily at 8AM GMT (6PM AEST, 7PM AEDT, 3AM EST, 12AM PST)
-// Post a maximum of one ephemera item
-// schedule.scheduleJob("0 8 * * *", function () {
-//     tweetLatestEphemera(1)
-// });
-
-// Temporary:
-// Run daily at 1:47AM GMT
-// Post a maximum of one ephemera item
-schedule.scheduleJob("20 2 * * *", function () {
-    tweetLatestEphemera(1)
-});
-// Run daily at 8PM GMT (6AM AEST, 7AM AEDT, 3PM EST, 12PM PST)
+// Checks for and tweets new Airtable records once a day
+// 8PM GMT (6AM AEST, 7AM AEDT, 3PM EST, 12PM PST)
 // Post a maximum of one ephemera item
 schedule.scheduleJob("0 20 * * *", function () {
     console.log("Kicking off process...")
