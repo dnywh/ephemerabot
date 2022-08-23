@@ -1,6 +1,13 @@
 // Get env variables up and running
 require("dotenv").config();
 
+// The built-in fetch seems to be having problems
+// https://blog.logrocket.com/fetch-api-node-js/
+// Temporarily using node-fetch@2.6.1
+// Example:
+// https://www.raymondcamden.com/2022/02/04/an-early-look-at-netlify-scheduled-functions
+const fetch = require('node-fetch');
+
 // Allow for scheduling tweets
 const schedule = require("node-schedule");
 // Prepare for automatic Netlify builds at the same time as tweeting
@@ -261,7 +268,7 @@ function prepareImage(record) {
 // Call main functions
 console.log("Starting...")
 // Instant functions for debugging only
-// tweetLatestEphemera(1)
+tweetLatestEphemera(1)
 // tweetThursdayRandomEphemera()
 
 // Throwback Thursday
@@ -279,9 +286,9 @@ console.log("Starting...")
 // });
 
 // Temporary:
-// Run daily at 1:30AM GMT
+// Run daily at 1:47AM GMT
 // Post a maximum of one ephemera item
-schedule.scheduleJob("30 1 * * *", function () {
+schedule.scheduleJob("47 1 * * *", function () {
     tweetLatestEphemera(1)
 });
 // Run daily at 8PM GMT (6AM AEST, 7AM AEDT, 3PM EST, 12PM PST)
