@@ -294,6 +294,12 @@ tweetLatestEphemera(1)
 //     tweetLatestEphemera(1)
 // });
 
+// Temporary:
+// Run daily at 1:47AM GMT
+// Post a maximum of one ephemera item
+schedule.scheduleJob("20 2 * * *", function () {
+    tweetLatestEphemera(1)
+});
 // Run daily at 8PM GMT (6AM AEST, 7AM AEDT, 3PM EST, 12PM PST)
 // Post a maximum of one ephemera item
 schedule.scheduleJob("0 20 * * *", function () {
